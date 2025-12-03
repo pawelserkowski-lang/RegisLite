@@ -1,9 +1,3 @@
-
----
-
-### 7.4 `Regis/debugger/debugger_patcher.py`
-
-```python
 import os
 import shutil
 from typing import List

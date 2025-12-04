@@ -15,7 +15,7 @@ load_dotenv()
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-MAX_ZIP_SIZE = 50 * 1024 * 1024  # 50MB
+MAX_ZIP_SIZE = 300 * 1024 * 1024  # 300MB
 
 @app.get("/", response_class=HTMLResponse)
 async def root():

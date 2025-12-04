@@ -110,3 +110,44 @@ ModuleNotFoundError: No module named 'requests'
 [32mINFO[0m:     Started server process [[36m16968[0m]
 [32mINFO[0m:     Waiting for application startup.
 [32mINFO[0m:     Application startup complete.
+[33mWARNING[0m:  StatReload detected changes in 'app.py'. Reloading...
+[32mINFO[0m:     Shutting down
+[32mINFO[0m:     Waiting for application shutdown.
+[32mINFO[0m:     Application shutdown complete.
+[32mINFO[0m:     Finished server process [[36m16968[0m]
+[32mINFO[0m:     Started server process [[36m16844[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+^C[32mINFO[0m:     Will watch for changes in these directories: ['C:\\Users\\BIURODOM\\Documents\\GitHub\\RegisLite']
+[32mINFO[0m:     Uvicorn running on [1mhttp://127.0.0.1:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     Started reloader process [[36m[1m6836[0m] using [36m[1mStatReload[0m
+[32mINFO[0m:     Started server process [[36m5892[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[33mWARNING[0m:  Unsupported upgrade request.
+[33mWARNING[0m:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+^C[32mINFO[0m:     Will watch for changes in these directories: ['C:\\Users\\BIURODOM\\Documents\\GitHub\\RegisLite']
+[32mINFO[0m:     Uvicorn running on [1mhttp://127.0.0.1:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     Started reloader process [[36m[1m3496[0m] using [36m[1mStatReload[0m
+[32mINFO[0m:     Started server process [[36m15872[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     127.0.0.1:64960 - "WebSocket /ws/68078d42" [accepted]
+[32mINFO[0m:     connection open
+^C[32mINFO[0m:     Will watch for changes in these directories: ['C:\\Users\\BIURODOM\\Documents\\GitHub\\RegisLite']
+[32mINFO[0m:     Uvicorn running on [1mhttp://127.0.0.1:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     Started reloader process [[36m[1m440[0m] using [36m[1mStatReload[0m
+[32mINFO[0m:     Started server process [[36m6304[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     127.0.0.1:55716 - "WebSocket /ws/7083337f" [accepted]
+[32mINFO[0m:     connection open
+^C[32mINFO[0m:     Will watch for changes in these directories: ['C:\\Users\\BIURODOM\\Documents\\GitHub\\RegisLite']
+[32mINFO[0m:     Uvicorn running on [1mhttp://127.0.0.1:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     Started reloader process [[36m[1m17896[0m] using [36m[1mStatReload[0m
+[32mINFO[0m:     Started server process [[36m7372[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     127.0.0.1:54984 - "WebSocket /ws/a97b1f52" [accepted]
+[32mINFO[0m:     connection open
+^C

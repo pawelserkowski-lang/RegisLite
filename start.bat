@@ -6,11 +6,11 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 :: -------------------------------------------------------------------
 
-title RegisLite Launcher 🥟 - Wersja Ostateczna
+title RegisLite Launcher 🥟 - Wersja Totalna
 
 echo ========================================================
 echo   🤖 RegisLite 4.5 - AUTO-SETUP
-echo   (Winget: ON - Pip: ON - Requests: FIXING...)
+echo   (Winget: ON - Pip: ON - Websockets: FIXING...)
 echo ========================================================
 echo.
 
@@ -42,25 +42,31 @@ if not exist "venv" (
 
 call venv\Scripts\activate.bat
 
-:: --- KROK 3: ZARZADZANIE PAKIETAMI (PIP + FIX) ---
+:: --- KROK 3: ZARZADZANIE PAKIETAMI (AUTO-FIX) ---
 echo [🐍 PIP] Aktualizacja menedzera pakietow...
 python -m pip install --upgrade pip setuptools wheel > nul 2>&1
 
-:: --- [🔧 AUTO-FIX] DLA REQUESTS ---
-:: Sprawdzamy czy requests jest w pliku, jak nie to dopisujemy
+:: --- [🔧 AUTO-FIX] DLA REQUIREMENTS ---
+:: Sprawdzamy requests
 findstr /i "requests" requirements.txt >nul 2>&1
 if %errorlevel% neq 0 (
-    echo.
-    echo [🔧 FIX] Wykryto brak 'requests' w requirements.txt. Naprawiam...
+    echo [🔧 FIX] Dodaje 'requests' do requirements.txt...
     echo requests>> requirements.txt
 )
-:: ----------------------------------
+
+:: Sprawdzamy websockets (TO JEST NOWE!)
+findstr /i "websockets" requirements.txt >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [🔧 FIX] Dodaje 'websockets' do requirements.txt...
+    echo websockets>> requirements.txt
+)
+:: ---------------------------------------
 
 echo [⬇️ PIP] Instalacja zaleznosci...
 pip install -r requirements.txt > install_log.txt 2>&1
 
-:: Dla pewnosci instalujemy requests recznie, gdyby pip marudzil
-pip install requests > nul 2>&1
+:: Dociskamy recznie kluczowe biblioteki, zeby miec 100% pewnosci
+pip install requests websockets > nul 2>&1
 
 if %errorlevel% neq 0 (
     echo [❌ ERROR] Blad instalacji. Sprawdz install_log.txt

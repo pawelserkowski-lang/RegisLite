@@ -1,393 +1,379 @@
-README.md – Regis 4.0 Debugger Edition (Monolith)
+# 🤖 RegisLite 4.5 - Polski AI Debugger
 
-Dokumentacja Techniczna + Przewodnik Rozwojowy
+> **Lokalny agent AI do automatycznego debugowania i naprawiania kodu** 🥟
 
-🧠 1. Wprowadzenie
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
 
-Regis 4.0 Debugger Edition jest lokalnym, samodzielnym środowiskiem AI do:
+---
 
-analizy projektów programistycznych
+## 📖 Spis Treści
 
-wykrywania błędów
+- [🎯 Czym jest RegisLite?](#-czym-jest-regislite)
+- [✨ Funkcje](#-funkcje)
+- [🚀 Quick Start](#-quick-start)
+- [📦 Architektura](#-architektura)
+- [💻 Jak używać](#-jak-używać)
+- [🔧 Konfiguracja](#-konfiguracja)
+- [🧪 Rozwój](#-rozwój)
+- [📝 Roadmapa](#-roadmapa)
 
-generowania łat programistycznych
+---
 
-automatycznej korekcji plików
+## 🎯 Czym jest RegisLite?
 
-debugowania wieloetapowego
+RegisLite to **lokalny debugger AI**, który:
+- 🔍 **Skanuje** projekty Python w poszukiwaniu błędów
+- 🤖 **Używa GPT-4** do generowania poprawek
+- ✅ **Automatycznie naprawia** kod
+- 💾 **Tworzy backupy** przed zmianami
+- 🔁 **Iteruje** aż do pełnej poprawności
+- 💬 **Terminal WebSocket** z komendami `ai:`, `py:`, `sh:`, `file:`
+
+**To jak ChatGPT dla Twojego kodu - tylko lepsze, bo naprawia go automatycznie!** 😎
+
+---
 
-integracji z modelami OpenAI
+## ✨ Funkcje
+
+### 🎯 Core Features
+- ✅ **Upload projektów** jako ZIP
+- 🔍 **Automatyczne skanowanie** w poszukiwaniu błędów/FIXME
+- 🤖 **AI-powered patching** (GPT-4/o3-mini)
+- 📝 **Unified diff** format dla zmian
+- 💾 **Automatyczne backupy** (`.bak` files)
+- 🔁 **Pętla debugowania** (max 10 iteracji)
+
+### 💻 Terminal WebSocket
+- 🧠 `ai:prompt` - Zapytaj ChatGPT o cokolwiek
+- 🐍 `py:code` - Wykonaj kod Python (sandboxed)
+- 🖥️ `sh:command` - Uruchom komendy shell
+- 📁 `file:action path` - Operacje na plikach (read/write/delete/list)
+
+### 🔒 Bezpieczeństwo
+- 🛡️ **Sandboxed Python execution** (AST validation)
+- 📏 **Limit rozmiaru ZIP** (50MB)
+- 🔐 **Environment variables** dla API keys
+- ⏱️ **Timeout** dla shell commands (30s)
+
+---
+
+## 🚀 Quick Start
+
+### 1️⃣ Wymagania
+
+```bash
+Python 3.11+
+pip (package manager)
+OpenAI API Key
+```
+
+### 2️⃣ Instalacja
+
+```bash
+# Sklonuj repo
+git clone https://github.com/pawelserkowski-lang/RegisLite.git
+cd RegisLite
+
+# Utwórz virtual environment
+python -m venv venv
+.\venv\Scripts\Activate.ps1  # Windows
+# source venv/bin/activate    # Linux/Mac
+
+# Zainstaluj zależności
+pip install -r requirements.txt
+```
+
+### 3️⃣ Konfiguracja
+
+```bash
+# Skopiuj przykładowy config
+cp .env.example .env
 
-wykonywania kodu lokalnego (python + shell)
+# Edytuj .env i dodaj swój klucz OpenAI
+# OPENAI_API_KEY=sk-proj-twoj-klucz-tutaj
+```
 
-manipulowania plikami lokalnymi
+### 4️⃣ Uruchomienie
+
+```powershell
+# Sposób 1: Użyj gotowego skryptu
+.\run.ps1
+
+# Sposób 2: Manualnie
+uvicorn app:app --reload --port 8000
+```
+
+Otwórz przeglądarkę: **http://localhost:8000** 🎉
+
+---
+
+## 📦 Architektura
+
+```
+RegisLite/
+├── app.py                      # 🚀 Główny serwer FastAPI
+├── ai/
+│   └── chatgpt_client.py      # 🤖 Klient OpenAI API
+├── debugger/
+│   ├── debugger_analyzer.py   # 🔍 Skanowanie projektu
+│   ├── debugger_fix.py        # 🛠️ Generowanie patchy
+│   ├── debugger_patcher.py    # ✂️ Aplikowanie zmian
+│   └── debugger_loop.py       # 🔁 Główna pętla debuggera
+├── rtc/
+│   └── signaling.py           # 💬 WebSocket command handler
+├── services/
+│   ├── python_tool.py         # 🐍 Safe Python execution
+│   └── file_tool.py           # 📁 File operations
+├── static/
+│   └── dashboard.html         # 🎨 UI (one-page app)
+└── workspace/                  # 💾 Runtime data (sessions)
+```
 
-obsługi ZIP (upload → extract → analyze → fix)
+### 🔄 Przepływ Danych
+
+```
+1. Upload ZIP → /upload
+   ↓
+2. Extract → workspace/{session_id}/project/
+   ↓
+3. Start Debug → /debug/{session_id}
+   ↓
+4. Debug Loop (max 10x):
+   - Skanuj pliki (FIXME detection)
+   - Jeśli błędy → Generate patches (GPT)
+   - Apply patches (with backups)
+   - Repeat
+   ↓
+5. Output → workspace/{session_id}/output_fixed/
+```
 
-tworzenia pętli naprawczej aż do pełnej poprawności
+---
 
-To forma lokalnego „AI Copilot Debugger” — działa offline dla kodu, a interakcja z OpenAI jest tylko przy analizie i generowaniu łatek.
+## 💻 Jak używać
 
-🧱 2. Architektura
+### 📤 Upload i Debug
 
-Projekt ma strukturę monolityczną (jedna przestrzeń kodowa, pełna kontrola nad wszystkim):
+1. **Wybierz ZIP** z projektem Python
+2. Kliknij **Upload ZIP**
+3. Poczekaj na potwierdzenie sesji
+4. Kliknij **Start Debug**
+5. Obserwuj logi w czasie rzeczywistym
+6. Pobierz naprawiony projekt z `workspace/{session}/output_fixed/`
 
-Regis/
- ├── app.py
- ├── signaling.py
- ├── dashboard.html
- ├── chatgpt_client.py
- ├── python_tool.py
- ├── shell_tool.py
- ├── exec_tool.py
- ├── file_tool.py
- ├── debugger_analyzer.py
- ├── debugger_fix.py
- ├── debugger_patcher.py
- ├── debugger_loop.py
- ├── workspace/
- │    ├── project/
- │    ├── output_fixed/
- │    └── backups/
- ├── requirements.txt
- ├── run.ps1
- └── README.md   ← (TEN PLIK)
+### 💬 Terminal Interaktywny
 
-⚙️ 3. Moduły i ich funkcje
-3.1 app.py – główny serwer
+Po uploadzie ZIP możesz używać terminala WebSocket:
 
-uruchamia FastAPI
+```bash
+# Zapytaj AI
+ai:napisz funkcję do sortowania listy słowników
+
+# Wykonaj Python
+py:print([x**2 for x in range(10)])
 
-renderuje GUI
+# Uruchom shell
+sh:dir
+sh:git status
+
+# Operacje na plikach
+file:list .
+file:read main.py
+file:write test.txt Hello World!
+file:delete temp.txt
+```
+
+---
+
+## 🔧 Konfiguracja
+
+### Environment Variables (`.env`)
+
+```bash
+# OpenAI API (WYMAGANE)
+OPENAI_API_KEY=sk-proj-your-key-here
+
+# Debug mode (opcjonalne)
+DEBUG=True
+
+# Max iterations (domyślnie 10)
+MAX_ITERATIONS=10
+
+# Model (gpt-4o-mini | gpt-4.1 | o3-mini)
+OPENAI_MODEL=gpt-4o-mini
+```
+
+### Dostosowanie Debuggera
+
+Edytuj `debugger/debugger_loop.py`:
+
+```python
+# Zmień heurystykę wykrywania błędów
+errors = [f["path"] for f in files if "FIXME" in f["content"]]
+
+# Dodaj własne reguły, np:
+# - AST parsing
+# - linting (pylint/flake8)
+# - security checks
+```
+
+---
+
+## 🧪 Rozwój
+
+### 🏗️ Struktura dla Developerów
+
+```python
+# Dodaj nowy tool do terminala
+# rtc/signaling.py
+
+elif cmd.startswith("mytool:"):
+    args = cmd[7:]
+    result = my_custom_tool(args)
+    return f"MyTool: {result}"
+```
+
+### 🧪 Testy (TODO)
+
+```bash
+# Uruchom testy (gdy zostaną dodane)
+pytest tests/
+
+# Coverage
+pytest --cov=. tests/
+```
 
-obsługuje upload ZIP
+### 📊 Health Check
 
-wywołuje debug loop
+```bash
+curl http://localhost:8000/health
 
-3.2 signaling.py – warstwa komend
+# Response:
+{
+  "status": "ok",
+  "openai_configured": true,
+  "workspace_exists": true,
+  "version": "4.5-fixed"
+}
+```
 
-Obsługuje komunikaty terminala:
+---
 
-Komenda	Funkcja
-ai:	zapytania do ChatGPT
-aifix:	AI fix (Codex-like)
-aismart:	auto-mode
-py:	uruchamianie kodu Python
-sh:	komendy systemowe
-run:	uruchamianie procesów
-file:*	operacje plikowe
-brak prefixu	auto eval/exec
+## 📝 Roadmapa
 
-To „mózg interakcji”.
+### ✅ Zrobione (v4.5)
+- ✅ Upload ZIP
+- ✅ Auto-debug loop
+- ✅ WebSocket terminal
+- ✅ Safe Python exec
+- ✅ File operations
+- ✅ Backups
 
-3.3 chatgpt_client.py – integracja OpenAI
+### 🚧 W Planach (v5.0)
 
-Obsługuje modele:
+#### 🎯 Core Improvements
+- [ ] **AST-based error detection** (zamiast heurystyki)
+- [ ] **Async GPT calls** (httpx zamiast requests)
+- [ ] **Response caching** (Redis/SQLite)
+- [ ] **Rate limiting** (max requests/min)
+- [ ] **Session persistence** (SQLite DB)
 
-gpt-4.1
+#### 🧪 Testing & Quality
+- [ ] **Unit tests** (pytest)
+- [ ] **Integration tests** (TestClient)
+- [ ] **Coverage >80%**
+- [ ] **Type hints** (mypy validation)
+- [ ] **Linting** (ruff + black)
 
-gpt-4.1-mini
+#### 🎨 UI/UX
+- [ ] **Real-time progress** (SSE/WebSocket)
+- [ ] **Syntax highlighting** (CodeMirror)
+- [ ] **Diff viewer** (before/after)
+- [ ] **Download fixed ZIP**
+- [ ] **History** (past sessions)
 
-o3-mini
+#### 🚀 Advanced Features
+- [ ] **Multi-language support** (JS, Go, Java)
+- [ ] **Git integration** (auto-commit, branches)
+- [ ] **Plugin system** (custom tools)
+- [ ] **Team features** (shared sessions)
+- [ ] **Cloud deployment** (Docker, K8s)
 
-Tryby:
+### 🌟 Wizja (v6.0+)
+- 🧠 **Multi-agent debugging** (specialized agents)
+- 🔗 **CI/CD integration** (GitHub Actions)
+- 📊 **Analytics dashboard** (metrics, insights)
+- 🤝 **Collaboration** (real-time multi-user)
+- 🌍 **SaaS version** (hosted service)
 
-Funkcja	Zastosowanie
-ask()	zwykły tekst
-codex_fix()	analiza kodu / poprawki
-smart()	wykrywanie kodu / auto-tryb
-3.4 python_tool.py / shell_tool.py / exec_tool.py
+---
 
-Zapewniają:
+## 🐛 Known Issues
 
-evaluation kodu
+1. **WebSocket disconnect** - Odśwież stronę i wgraj ZIP ponownie
+2. **Large ZIPs timeout** - Limit to 50MB, podziel projekt na mniejsze części
+3. **GPT rate limits** - Dodaj retry logic lub użyj mniejszego modelu
 
-wykonywanie procedur
+---
 
-uruchamianie aplikacji
+## 🤝 Contributing
 
-integrację systemową
+Chcesz pomóc? Super! 🎉
 
-3.5 file_tool.py – operacje na plikach
+1. Fork repo
+2. Utwórz branch (`git checkout -b feature/amazing-feature`)
+3. Commit zmiany (`git commit -m 'Add amazing feature'`)
+4. Push (`git push origin feature/amazing-feature`)
+5. Otwórz Pull Request
 
-Obsługuje:
+**Guidelines:**
+- Zachowaj PEP 8
+- Dodaj testy do nowych funkcji
+- Zaktualizuj README jeśli trzeba
+- Bądź miły w komentarzach 😊
 
-listowanie
+---
 
-odczyt
+## 📜 License
 
-zapis
+MIT License - patrz [LICENSE](LICENSE)
 
-kopiowanie
+**TL;DR:** Rób co chcesz, tylko zostaw credit! 😎
 
-usuwanie
+---
 
-tworzenie katalogów
+## 🙏 Credits
 
-🧠 4. System Debuggera (Debugger Engine)
+Stworzone z ❤️ i ☕ przez **@pawelserkowski-lang**
 
-To serce całego systemu: AI Debug Loop.
+Technologie:
+- [FastAPI](https://fastapi.tiangolo.com/) - Web framework
+- [OpenAI](https://openai.com/) - GPT models
+- [Uvicorn](https://www.uvicorn.org/) - ASGI server
+- Mnóstwo pierogów 🥟
 
-Składa się z modułów:
+---
 
-4.1 debugger_analyzer.py
+## 📞 Kontakt
 
-Odpowiada za:
+- 🐙 GitHub: [@pawelserkowski-lang](https://github.com/pawelserkowski-lang)
+- 💬 Issues: [GitHub Issues](https://github.com/pawelserkowski-lang/RegisLite/issues)
 
-rekursywne skanowanie projektu
+---
 
-pobieranie treści plików
+## 🥟 Fun Fact
 
-filtrowanie tylko istotnych formatów
+Ten projekt powstał po nocnej sesji kodowania zasilanej pierogami i kawą. Każdy commit to dowód, że polskie pierogi dają programistyczną inspirację! 🇵🇱
 
-raportowanie struktur
+**Zbudujmy razem przyszłość AI-powered development!** 🚀
 
-4.2 debugger_fix.py
+---
 
-Zadanie:
+<div align="center">
+  
+### ⭐ Jeśli lubisz RegisLite, zostaw gwiazdkę! ⭐
 
-generować łatki diff
+**Made with 🥟 in Poland**
 
-wysyłać błędy do ChatGPT
-
-interpretować odpowiedź
-
-4.3 debugger_patcher.py
-
-Zadanie:
-
-parsować diff
-
-stosować zmiany
-
-tworzyć backupy
-
-zabezpieczać integralność
-
-Backupy trafiają do:
-
-workspace/backups/
-
-4.4 debugger_loop.py – pętla debuggera
-
-Najważniejszy element.
-
-Pseudokod:
-
-for pass in 0..9:
-    zeskanuj projekt
-    znajdź błędy (heurystyka lub AST)
-    jeśli brak błędów → koniec
-    wygeneruj łatki (ChatGPT)
-    nałóż łatki
-
-
-W razie błędu:
-
-zapisuje log
-
-nie przerywa bez powodu
-
-zatrzymuje się dopiero gdy projekt jest „czysty”
-
-Wynik trafia do GUI.
-
-📂 5. Workspace – środowisko projektów
-
-Folder:
-
-workspace/
-    project/       ← projekt wejściowy
-    output_fixed/  ← projekt po naprawie
-    backups/       ← kopie bezpieczeństwa
-
-
-Podczas debugowania:
-
-pliki z project/ są analizowane
-
-laki stosowane w miejscu
-
-na końcu mogą zostać przeniesione do output_fixed/
-
-🖥️ 6. Interfejs użytkownika (dashboard.html)
-
-UI zawiera:
-
-wybór pliku ZIP
-
-przycisk „Upload ZIP”
-
-przycisk „Start Debug Loop”
-
-panel logów
-
-terminal WebRTC
-
-Czyli pełne sterowanie agentem.
-
-💬 7. Jak działa komunikacja z OpenAI?
-
-Każdy etap debugowania używa modelu:
-
-gpt-4.1
-lub
-o3-mini (kod)
-
-
-Model generuje:
-
-opis błędów
-
-plan działania
-
-łatki diff
-
-Każda iteracja pętli:
-
-errors → GPT → diff → patch → scan → repeat
-
-
-To imitacja profesjonalnych narzędzi typu:
-
-GitHub Copilot
-
-OpenAI Developer Tools
-
-IntelliJ AI Assistant
-
-Ale działa lokalnie.
-
-🛰️ 8. Jak rozwijać projekt
-
-Sekcja najważniejsza dla przyszłych wersji.
-
-8.1 Dodanie AST-analyzera
-
-Możemy dodać:
-
-wykrywanie błędnych importów
-
-wykrywanie błędnych wywołań funkcji
-
-sprawdzanie brakujących argumentów
-
-wykrywanie nieużywanych zmiennych
-
-8.2 Dodanie generatora testów
-
-AI może generować:
-
-testy jednostkowe
-
-testy integracyjne
-
-dane testowe
-
-coverage
-
-8.3 Dodanie AI Refactoring Engine
-
-Możemy:
-
-przepisywać projekt na OOP
-
-wprowadzać typowanie
-
-usuwać code-smells
-
-implementować SOLID
-
-generować strukturę folderów
-
-8.4 Dodanie Continuous Debugging
-
-Agent:
-
-wykrywa zmiany plików
-
-automatycznie debugguje
-
-sam się zapętla
-
-8.5 Dodanie WebRTC Media Stream
-
-Możemy rozszerzyć o:
-
-stream audio
-
-stream video
-
-live coding
-
-🔮 9. Roadmapa Regis 5.0+ (propozycja)
-Wersja	Funkcje
-5.0	AST + analiza typów + pełny test generator
-5.1	AI refactor engine
-5.2	live debugging w przeglądarce
-5.3	integracja z Git (diff, push, branches)
-5.4	pluginy rozszerzające komendy
-6.0	pełne IDE AI (edytor kodu + chat)
-7.0	multi-agent debugging (kotwice logiczne)
-8.0	obsługa projektów w C/C++/Go/TS/Java
-⚠️ 10. Ograniczenia
-
-Regis 4.0 nie jest:
-
-pełnym interpreterem
-
-sandboxem
-
-środowiskiem CI/CD
-
-Jest za to:
-
-inteligentnym asystentem AI
-
-lokalnym debuggerem
-
-narzędziem do refaktoru
-
-silnikiem patchowania projektów
-
-💡 11. Pomysły przyszłościowe
-
-Auto-moduł „AI Commit Message”
-
-Auto-opis zmian
-
-Eksport zmian jako PR
-
-Integracja ze Slack/Discord
-
-Tworzenie dokumentacji automatycznie
-
-🏁 12. Podsumowanie
-
-Regis 4.0 Debugger Edition to:
-
-lokalny debug AI
-
-pełna analiza projektów
-
-AI patch engine
-
-obsługa ZIP
-
-pętla naprawcza
-
-terminal i GUI
-
-integracja OpenAI
-
-możliwość pełnej rozbudowy
-
-To fundament do budowy:
-
-własnego IDE
-
-własnego CI/CD
-
-własnego AI Copilota
-
-własnego systemu do analizy dowolnych repozytoriów
+</div>

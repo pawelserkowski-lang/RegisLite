@@ -3,7 +3,7 @@ import json
 import logging
 from src.services.python_tool import exec_python
 from src.services.file_tool import file_crud
-from src.ai.chatgpt_client import ask_with_stats
+from src.ai.model_client import ask_with_stats
 
 logger = logging.getLogger(__name__)
 

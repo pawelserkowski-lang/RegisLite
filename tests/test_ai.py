@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, AsyncMock
-from src.ai.chatgpt_client import classify_intent
+from src.ai.model_client import classify_intent
 
 
 @pytest.mark.asyncio
@@ -31,7 +31,7 @@ async def test_classify_intent_regex_py():
 async def test_classify_intent_llm_fallback():
     # Test LLM fallback
     with patch(
-        "src.ai.chatgpt_client._call_gpt_with_retry",
+        "src.ai.model_client._call_gpt_with_retry",
         new_callable=AsyncMock
     ) as mock_gpt:
         mock_gpt.return_value = (

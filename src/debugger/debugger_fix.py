@@ -3,7 +3,7 @@ import sys
 import platform
 import os
 from typing import Dict, List
-from src.ai.chatgpt_client import ask
+from src.ai.model_client import ask
 
 # Wykrywanie srodowiska
 PYTHON_VER = f'{sys.version_info.major}.{sys.version_info.minor}'

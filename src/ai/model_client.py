@@ -10,8 +10,56 @@ from src.config.errors import APIError
 
 logger = logging.getLogger(__name__)
 
+# Obsługa wielu kluczy API (Priorytetyzacja: Gemini > OpenAI)
+GEMINI_KEY = os.getenv("GEMINI_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+
+async def _call_gemini_native(
+    messages: List[Dict[str, str]],
+    json_mode: bool = False
+) -> Tuple[str, float, str]:
+    """Obsługa Google Generative AI (Gemini)."""
+    import google.generativeai as genai
+
+    genai.configure(api_key=GEMINI_KEY)
+
+    # Mapowanie historii rozmowy
+    # Ostatnia wiadomość to user/system prompt
+    prompt_text = ""
+    system_instruction = None
+
+    # Proste scalanie kontekstu dla Gemini (można ulepszyć w przyszłości)
+    for msg in messages:
+        if msg["role"] == "system":
+            system_instruction = msg["content"]
+        else:
+            prompt_text += f"{msg['role']}: {msg['content']}\n"
+
+    start_time = time.time()
+
+    generation_config = genai.types.GenerationConfig(
+        temperature=0.2,
+    )
+
+    if json_mode:
+        generation_config.response_mime_type = "application/json"
+
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",  # Używamy szybkiego modelu flash
+        system_instruction=system_instruction
+    )
+
+    response = await model.generate_content_async(
+        prompt_text,
+        generation_config=generation_config
+    )
+
+    duration = time.time() - start_time
+    content = response.text
+
+    return content, duration, "gemini-1.5-flash"
 
 
 async def _call_gpt_with_retry(
@@ -21,10 +69,27 @@ async def _call_gpt_with_retry(
     retries: int = 3
 ) -> Tuple[str, float, str]:
     """
-    Wywołanie API z mechanizmem Retry (Backoff).
+    Wywołanie API z mechanizmem Retry (Backoff) oraz obsługą Gemini.
     """
+    # 1. Priorytet: Google Gemini
+    if GEMINI_KEY:
+        try:
+            return await _call_gemini_native(messages, json_mode)
+        except Exception as e:
+            logger.error(f"Gemini API Error: {e}. Fallback to OpenAI if available.")
+            if not OPENAI_API_KEY:
+                # Jeśli nie ma OpenAI, rzucamy błąd Gemini
+                raise APIError(f"Gemini Error and no OpenAI key: {e}")
+
+    # 2. Fallback / Opcja: OpenAI
     if not OPENAI_API_KEY:
-        raise ValueError("Brak klucza OPENAI_API_KEY!")
+        # Mock mode only if NO keys are present at all
+        logger.warning("Brak kluczy API. Uruchamiam tryb symulacji Jules (Mock).")
+        return (
+            json.dumps({"tool": "ai", "args": "Symulowana odpowiedź Jules."}) if json_mode else "To jest symulowana odpowiedź systemu Jules (brak kluczy API).",
+            0.1,
+            "mock-model"
+        )
 
     url = "https://api.openai.com/v1/chat/completions"
     headers = {

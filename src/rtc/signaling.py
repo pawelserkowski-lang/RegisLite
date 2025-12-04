@@ -1,6 +1,6 @@
 import json
 import logging
-from src.ai.chatgpt_client import classify_intent
+from src.ai.model_client import classify_intent
 from src.rtc.session_manager import SessionManager
 from src.rtc.tool_executor import ToolExecutor
 from src.config.errors import BaseError

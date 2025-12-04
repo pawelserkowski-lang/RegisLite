@@ -1,7 +1,0 @@
-Moduyfikacje UI:
-1. Gemini widok dynamiczny
-1. Notatnik z pamięcią i listą
-2. Okienko drag and drop
-
-
-A logo for an AI IT company '[EPS AI SOLUTIONS]'. The style is a fusion of cyberpunk and arcane magic. The central icon is a stylized CPU chip made of dark, ancient crystal, glowing with deep green magical runes that form circuit patterns. Below the icon, the text '[EPS AI SOLUTIONS]' is rendered exactly in the wide, futuristic, sleek style of the "Neuropol" font. The text also glows with toxic green neon energy against a dark background.

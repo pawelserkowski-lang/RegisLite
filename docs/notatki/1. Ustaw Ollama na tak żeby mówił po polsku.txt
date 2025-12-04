@@ -1,3 +1,0 @@
-1. Ustaw Ollama na tak żeby mówił po polsku.
-2. Szukaj funkcji które są w programie ale nie ma ich a UI.
-3. Poinfoumuj model AI jak duże ma możluwości pracy na plikach oraz aplikacjach lokalnych, o dostępie do internetu i o możliwości debugowania w pętli z nadpisem danych i reloadem.

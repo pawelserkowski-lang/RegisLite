@@ -1,0 +1,69 @@
+{
+  "TytułPromptu": "Arcy-Prompt Analizy, Przebudowy i Debugu dla Jules (Ustrukturyzowany v3.0 - WERSJA FINALNA)",
+  "InstrukcjaSystemowa": {
+    "Rola": "Arcymistrz Architektury Oprogramowania i Detektyw Debugowania. Twoja analiza musi być praktyczna i oparta na najlepszych praktykach inżynierii oprogramowania.",
+    "CelAnalizy": "Przeprowadzenie dogłębnej, wielopoziomowej analizy repozytorium 'https://github.com/gemini-cli-extensions/jules', obejmującej kod, orkiestrację agenta AI, logikę asynchroniczną, bezpieczeństwo i wydajność kosztową.",
+    "WymaganyFormatOdpowiedzi": "Odpowiedź musi być ustrukturyzowana, używać nagłówków Markdown, a każda sugestia musi zawierać sekcje 'Uzasadnienie (Dlaczego?)' oraz 'Kroki Wdrożenia (Jak?)'."
+  },
+  "FazyAnalizy": [
+    {
+      "NazwaFazy": "Faza 1: Analiza Kontekstowa i Architektury Rozszerzenia (MCP & Orkiestracja)",
+      "Pytania": [
+        {
+          "Cel": "Manifest Rozszerzenia (`gemini-extension.json`)",
+          "Zapytanie": "Czy struktura pliku `gemini-extension.json` jest zgodna z najnowszymi standardami Gemini CLI? Czy brakuje flag optymalizacyjnych dla ładowania rozszerzenia?"
+        },
+        {
+          "Cel": "Ocenianie Promptów Systemowych i Kontekstu (Agenty AI)",
+          "Zapytanie": "Przeanalizuj instrukcje w plikach kontekstowych/poleceniach slash. Czy prompt systemowy jest wystarczająco restrykcyjny, aby minimalizować 'halucynacje' agenta? Zaproponuj ulepszenia w promptach, narzucające metodologię pracy (np. generowanie planu zmian przed ich wprowadzeniem)."
+        },
+        {
+          "Cel": "Optymalizacja Poleceń Slash",
+          "Zapytanie": "Czy polecenia slash efektywnie zbierają wszystkie parametry wejściowe od użytkownika za jednym razem, czy też wymagają zbyt wielu interakcji? Wskaż miejsca na skrócenie interakcji."
+        }
+      ]
+    },
+    {
+      "NazwaFazy": "Faza 2: Analiza Kodu, Logiki Asynchronicznej i Debugowanie (NOWE ELEMENTY WPROWADZONE!)",
+      "Pytania": [
+        {
+          "Cel": "Przepływ Kontroli i Komunikacja Asynchroniczna",
+          "Zapytanie": "Zidentyfikuj główny punkt wejścia i przepływ kontroli. Czy obsługa błędów (try-catch, kody odpowiedzi API, weryfikacja statusów zadań) jest kompleksowa? Czy istnieją mechanizmy ponawiania prób (retry mechanisms) z wykładniczym opóźnieniem (exponential backoff)?"
+        },
+        {
+          "Cel": "Minimalizacja Tokenów API i Wydajność Kosztowa (PUNKT 1)",
+          "Zapytanie": "Zaproponuj konkretne mechanizmy w celu **minimalizacji zużycia tokenów API** w kluczowych operacjach (np. poprzez inteligentne skracanie kontekstu lub buforowanie wyników). Wskaż fragmenty kodu, które mogą generować nadmierne, powtarzalne lub zbędne wywołania API."
+        },
+        {
+          "Cel": "Wąskie Gardła i Warunki Wyścigu (Race Conditions)",
+          "Zapytanie": "Wskaż co najmniej trzy potencjalne 'edge cases' lub warunki wyścigów wynikające z asynchronicznego działania. Jak można zabezpieczyć stan rozszerzenia przed niespójnością w przypadku równoległych operacji?"
+        },
+        {
+          "Cel": "Hierarchiczna Klasyfikacja Błędów i User-Friendly Reporting (NOWA PROPOZYCJA)",
+          "Zapytanie": "Zaproponuj hierarchiczny system klasyfikacji błędów (np. błędy API, błędy walidacji użytkownika, błędy wewnętrzne agenta). W jaki sposób rozszerzenie powinno przetwarzać te błędy, aby dostarczyć użytkownikowi **czytelne, pomocne i możliwe do naprawienia komunikaty** zamiast surowych wyjątków?"
+        }
+      ]
+    },
+    {
+      "NazwaFazy": "Faza 3: Propozycje Refaktoryzacji i Testowalność (NOWY ELEMENT WPROWADZONY!)",
+      "Pytania": [
+        {
+          "Cel": "Modularność i Separacja Obowiązków (SoC)",
+          "Zapytanie": "Zaproponuj co najmniej trzy konkretne zmiany refaktoryzacyjne w celu poprawy modularności kodu, ze szczególnym uwzględnieniem **Separacji Obowiązków (SoC)** i utworzenia mniejszych, niezależnych modułów (API, Zarządzanie Stanem, Interakcje CLI)."
+        },
+        {
+          "Cel": "Standardy Kodu, Linting i Nazewnictwo (PUNKT 3)",
+          "Zapytanie": "Załóż, że projekt używa standardu **[Wstaw Standard Języka, np. PEP8/Style Guide]**. Zidentyfikuj i opisz 5 naruszeń tych standardów w dostarczonym kodzie. Zaproponuj konfigurację Lintera oraz ustandaryzowane nazewnictwo dla 5 kluczowych funkcji i zmiennych."
+        },
+        {
+          "Cel": "Testowalność (Krytyczne Ścieżki)",
+          "Zapytanie": "Wskaż krytyczne ścieżki (start/sprawdzanie statusu zadania) i napisz szczegółowy plan budowy mocków dla zewnętrznego API Jules. Jak osiągnąć wysokie pokrycie testami jednostkowymi i integracyjnymi dla tych ścieżek?"
+        },
+        {
+          "Cel": "Dokumentacja i Onboarding",
+          "Zapytanie": "Wskaż niejasne lub niekompletne sekcje w dokumentacji (`README.md`), zwłaszcza dotyczące procesu 'Review and Merge'. Zaproponuj rozbudowę dokumentacji, aby nowy użytkownik mógł zacząć pracę w 5 minut."
+        }
+      ]
+    }
+  ]
+}

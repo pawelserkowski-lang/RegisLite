@@ -205,13 +205,11 @@ async function upload() {
 }
 
 async function debug() {
+    if (!ws) return alert("Brak połączenia!");
+    const cmd = "Przeprowadź pełną analizę i naprawę projektu.";
     log("🚀 Uruchamiam Auto-Fixer...", 'user');
-    fetch(`/debug/${sid}`, { method: "POST" })
-        .then(r => r.json())
-        .then(d => {
-            d.forEach(l => log(l, 'progress'));
-        })
-        .catch(e => log(e.message, 'error'));
+    ws.send(cmd);
+    updateProgress(20, "Autonaprawa...");
 }
 
 function initWS() {

@@ -1,6 +1,6 @@
 # services/file_tool.py
 import os
-import shutil
+
 
 def file_crud(action: str, args: str, base_path: str):
     full_path = os.path.join(base_path, args.split()[0]) if args else ""

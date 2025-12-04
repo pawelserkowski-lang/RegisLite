@@ -3,11 +3,13 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from src.rtc.tool_executor import ToolExecutor
 import json
 
+
 @pytest.fixture
 def mock_session_manager():
     sm = MagicMock()
     sm.get_history.return_value = []
     return sm
+
 
 @pytest.mark.asyncio
 async def test_tool_executor_sh(mock_session_manager):
@@ -29,11 +31,15 @@ async def test_tool_executor_sh(mock_session_manager):
         assert results[1]["type"] == "result"
         assert "output" in results[1]["content"]
 
+
 @pytest.mark.asyncio
 async def test_tool_executor_ai(mock_session_manager):
     executor = ToolExecutor(mock_session_manager)
 
-    with patch("src.rtc.tool_executor.ask_with_stats", new_callable=AsyncMock) as mock_ask:
+    with patch(
+        "src.rtc.tool_executor.ask_with_stats",
+        new_callable=AsyncMock
+    ) as mock_ask:
         mock_ask.return_value = ("AI Response", 1.0, "gpt-mock")
 
         results = []

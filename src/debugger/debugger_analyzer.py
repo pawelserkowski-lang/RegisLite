@@ -1,23 +1,24 @@
 import os
 from typing import List, Dict
 
+
 def scan_project(base_path: str) -> List[Dict[str, str]]:
     """
     Skanuje projekt, ale OMIJA foldery systemowe i biblioteki.
     """
     result = []
-    
+
     # Lista folderów do ignorowania (czarna lista)
     IGNORE_DIRS = {
-        "node_modules", "venv", ".venv", ".git", "__pycache__", 
+        "node_modules", "venv", ".venv", ".git", "__pycache__",
         "dist", "build", "coverage", ".idea", ".vscode"
     }
-    
+
     # Lista rozszerzeń do ignorowania (binarki, mapy, obrazki)
     IGNORE_EXT = {
-        ".map", ".png", ".jpg", ".jpeg", ".gif", ".ico", 
+        ".map", ".png", ".jpg", ".jpeg", ".gif", ".ico",
         ".pyc", ".pyo", ".pyd", ".so", ".dll", ".exe", ".bin",
-        ".lock", ".json", ".zip", ".tar", ".gz" 
+        ".lock", ".json", ".zip", ".tar", ".gz"
     }
 
     if not os.path.exists(base_path):
@@ -36,7 +37,7 @@ def scan_project(base_path: str) -> List[Dict[str, str]]:
 
             full_path = os.path.join(root, name)
             rel_path = os.path.relpath(full_path, base_path)
-            
+
             try:
                 # Limit wielkości pojedynczego pliku (np. max 100KB), żeby nie zatkać AI
                 if os.path.getsize(full_path) > 100 * 1024:

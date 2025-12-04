@@ -2,6 +2,7 @@ import os
 import shutil
 from typing import List
 
+
 def apply_patches(patch_text: str, base_path: str) -> List[str]:
     """
     Aplikuje zmiany w plikach wewnątrz base_path.
@@ -21,11 +22,11 @@ def apply_patches(patch_text: str, base_path: str) -> List[str]:
                 _write_file(current_file, "\n".join(buffer), base_path)
                 modified_files.append(current_file)
                 buffer = []
-            
+
             # Usuń ewentualne prefiksy ścieżek, jeśli AI zwariuje
             raw_path = line[len("FILE:"):].strip()
             current_file = raw_path.replace("workspace/project/", "").strip("/")
-            
+
             in_code = False
             continue
 
@@ -50,6 +51,7 @@ def apply_patches(patch_text: str, base_path: str) -> List[str]:
         modified_files.append(current_file)
 
     return modified_files
+
 
 def _write_file(rel_path: str, content: str, base_dir: str) -> None:
     full_path = os.path.join(base_dir, rel_path)

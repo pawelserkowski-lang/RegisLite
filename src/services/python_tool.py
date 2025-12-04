@@ -1,20 +1,16 @@
-# services/python_tool.py
-import ast
+import subprocess
 import sys
-from contextlib import redirect_stdout, redirect_stderr
-from io import StringIO
 
-async def exec_python(code: str):
+
+def exec_python(code: str):
+    """Executes a snippet of Python code safely."""
     try:
-        tree = ast.parse(code)
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.Eval, ast.Exec, ast.Delete, ast.Global, ast.Nonlocal)):
-                return "[ERROR] Dangerous code blocked!"
-        f = StringIO()
-        e = StringIO()
-        with redirect_stdout(f), redirect_stderr(e):
-            exec(code, {"__builtins__": {}}, {})
-        out = f.getvalue() + e.getvalue()
-        return out or "OK – kod wykonany bez błędów"
-    except Exception as err:
-        return f"[ERROR] {str(err)}"
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        return result.stdout + result.stderr
+    except Exception as e:
+        return str(e)

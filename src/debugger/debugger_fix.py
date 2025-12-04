@@ -35,6 +35,7 @@ END_FILE
 Jeśli kod jest poprawny: NO_CHANGES_NEEDED
 '''
 
+
 def _format_files(files: List[Dict[str, str]]) -> str:
     formatted = []
     # Bierzemy max 20 plików
@@ -44,21 +45,27 @@ def _format_files(files: List[Dict[str, str]]) -> str:
         # Zabezpieczenie przed tokenami
         if len(content) > 30000:
             content = '<PLIK ZA DUZY - POMINIETO TRESC>'
-        formatted.append(f'=== PLIK: {path} ===\n{content}\n')
+        formatted.append(
+            f"=== PLIK: {path} ===\n{content}\n"
+        )
     return '\n'.join(formatted)
+
 
 async def generate_patches(errors: str, files: List[Dict[str, str]]) -> str:
     # Formatowanie plikow do promptu
     files_str = _format_files(files)
-    
+
     # Debug - sprawdzamy czy pliki w ogole wchodza
     if not files_str.strip():
         return 'BLAD: Nie udalo sie wczytac tresci plikow do promptu.'
 
     header = f'SYSTEM: {OS_NAME} | CWD: {os.getcwd()}'
-    prompt = f'{PATCH_INSTRUCTIONS}\n[{header}]\nZADANIE:\n{errors}\nPLIKI:\n{files_str}'
+    prompt = (
+        f'{PATCH_INSTRUCTIONS}\n[{header}]\n'
+        f'ZADANIE:\n{errors}\nPLIKI:\n{files_str}'
+    )
 
     try:
         return await ask(prompt)
-    except Exception as e:
+    except Exception:
         return f'LLM error: {traceback.format_exc()}'

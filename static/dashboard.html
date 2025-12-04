@@ -5,33 +5,171 @@
     <title>RegisLite 4.5 – Polski AI Debugger</title>
     <script src="https://unpkg.com/simple-peer@9.11.1/simplepeer.min.js"></script>
     <style>
-        body { font-family: system-ui; background: #0d1117; color: #c9d1d9; margin: 40px; }
-        .card { background: #161b22; padding: 40px; border-radius: 16px; max-width: 900px; margin: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
-        h1 { color: #58a6ff; }
-        button { padding: 14px 28px; font-size: 18px; background: #238636; border: none; border-radius: 8px; color: white; cursor: pointer; margin: 10px; }
-        button:hover { background: #2ea043; }
-        button:disabled { background: #555; cursor: not-allowed; }
-        #logs { background: #010409; padding: 20px; border-radius: 8px; white-space: pre-wrap; margin-top: 20px; min-height: 200px; }
-        #terminal { background: #0d1117; padding: 15px; border: 1px solid #58a6ff; border-radius: 8px; margin-top: 20px; }
-        #cmd { width: 80%; padding: 10px; background: #30363d; border: 1px solid #58a6ff; color: white; }
-        input[type="file"] { padding: 10px; background: #30363d; border: 1px solid #58a6ff; border-radius: 6px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: linear-gradient(135deg, #0d1117 0%, #1a1e2e 100%); 
+            color: #c9d1d9; 
+            padding: 20px; 
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { 
+            background: #161b22; 
+            padding: 40px; 
+            border-radius: 16px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            margin-bottom: 20px;
+        }
+        h1 { 
+            color: #58a6ff; 
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
+        }
+        .subtitle {
+            color: #8b949e;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .status-ready { background: #238636; color: white; }
+        .status-working { background: #d29922; color: white; }
+        .status-error { background: #da3633; color: white; }
+        
+        button { 
+            padding: 14px 28px; 
+            font-size: 18px; 
+            background: #238636; 
+            border: none; 
+            border-radius: 8px; 
+            color: white; 
+            cursor: pointer; 
+            margin: 10px 10px 10px 0; 
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        button:hover { 
+            background: #2ea043; 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.4);
+        }
+        button:disabled { 
+            background: #555; 
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #logs { 
+            background: #010409; 
+            padding: 20px; 
+            border-radius: 8px; 
+            white-space: pre-wrap; 
+            margin-top: 20px; 
+            min-height: 300px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-y: auto;
+            max-height: 500px;
+            border: 1px solid #30363d;
+        }
+        
+        #terminal { 
+            background: #0d1117; 
+            padding: 20px; 
+            border: 2px solid #58a6ff; 
+            border-radius: 8px; 
+            margin-top: 20px; 
+        }
+        .terminal-header {
+            color: #58a6ff;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        #cmd { 
+            width: calc(100% - 120px); 
+            padding: 12px; 
+            background: #30363d; 
+            border: 1px solid #58a6ff; 
+            color: white;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+        }
+        #term-output {
+            margin-top: 15px;
+            padding: 15px;
+            background: #010409;
+            border-radius: 6px;
+            min-height: 200px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            color: #0f0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        input[type="file"] { 
+            padding: 12px; 
+            background: #30363d; 
+            border: 2px solid #58a6ff; 
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        input[type="file"]::file-selector-button {
+            background: #238636;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .emoji { font-size: 1.5rem; margin-right: 8px; }
+        .section-title {
+            color: #58a6ff;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
-<div class="card">
-    <h1>RegisLite v4.5</h1>
-    <p>Upload ZIP → Debug → Realtime terminal (ai:/py:/sh:/file:)</p>
+<div class="container">
+    <div class="card">
+        <h1><span class="emoji">🤖</span>RegisLite v4.5 <span class="status-badge status-ready" id="status">READY</span></h1>
+        <p class="subtitle">Polski AI Debugger - Upload → Analyze → Fix → Deploy</p>
+        
+        <div class="section-title"><span class="emoji">📦</span>1. Wybierz projekt</div>
+        <input type="file" id="zip" accept=".zip">
+        <button onclick="upload()">Upload ZIP</button>
+        <button onclick="debug()" id="btn" disabled>🚀 Start Debug</button>
+        
+        <div class="section-title" style="margin-top: 30px;"><span class="emoji">📊</span>2. Logi debugowania</div>
+        <div id="logs">Gotowy do pracy... Czekam na ZIP! 🥟</div>
+    </div>
     
-    <input type="file" id="zip" accept=".zip">
-    <button onclick="upload()">Upload ZIP</button>
-    <button onclick="debug()" id="btn" disabled>Start Debug</button>
-    
-    <div id="logs">Gotowy do pracy...</div>
-    
-    <div id="terminal">
-        <input type="text" id="cmd" placeholder="ai:prompt, py:print(42), sh:dir, file:read test.py">
+    <div class="card">
+        <div class="terminal-header"><span class="emoji">💻</span>Terminal Interaktywny</div>
+        <p style="color: #8b949e; margin-bottom: 15px;">
+            Komendy: <code>ai:prompt</code>, <code>py:code</code>, <code>sh:command</code>, <code>file:action path</code>
+        </p>
+        <input type="text" id="cmd" placeholder="Wpisz komendę... np: ai:napisz funkcję sortującą">
         <button onclick="sendCmd()">Wyślij</button>
-        <div id="term-output"></div>
+        <div id="term-output"># Terminal gotowy...\n# Wpisz komendę powyżej i kliknij Wyślij</div>
     </div>
 </div>
 
@@ -39,41 +177,149 @@
 let sid = null;
 let ws = null;
 
+function updateStatus(text, type) {
+    const badge = document.getElementById('status');
+    badge.textContent = text;
+    badge.className = 'status-badge status-' + type;
+}
+
 async function upload() {
     const file = document.getElementById('zip').files[0];
-    if (!file) return alert("Wybierz ZIP!");
+    if (!file) {
+        alert("Wybierz ZIP!");
+        return;
+    }
+    
+    updateStatus('UPLOADING...', 'working');
+    log(`📤 Wysyłam: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+    
     const form = new FormData();
     form.append("file", file);
-    const res = await fetch("/upload", { method: "POST", body: form });
-    const data = await res.json();
-    sid = data.session_id;
-    log(`Session: ${sid}\n${data.message}`);
-    document.getElementById('btn').disabled = false;
-    initWebSocket();
+    
+    try {
+        const res = await fetch("/upload", { method: "POST", body: form });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            log(`❌ BŁĄD: ${error.detail}`);
+            updateStatus('ERROR', 'error');
+            return;
+        }
+        
+        const data = await res.json();
+        sid = data.session_id;
+        log(`✅ Session: ${sid}\n${data.message}`);
+        document.getElementById('btn').disabled = false;
+        updateStatus('READY TO DEBUG', 'ready');
+        initWebSocket();
+    } catch (err) {
+        log(`❌ BŁĄD POŁĄCZENIA: ${err.message}`);
+        updateStatus('ERROR', 'error');
+    }
 }
 
 async function debug() {
-    fetch(`/debug/${sid}`, { method: "POST" })
-        .then(r => r.json())
-        .then(d => log(d.logs));
+    if (!sid) {
+        alert("Najpierw wgraj ZIP!");
+        return;
+    }
+    
+    updateStatus('DEBUGGING...', 'working');
+    log(`\n🔍 Rozpoczynam debugowanie sesji ${sid}...\n`);
+    document.getElementById('btn').disabled = true;
+    
+    try {
+        const res = await fetch(`/debug/${sid}`, { method: "POST" });
+        const data = await res.json();
+        
+        if (data.logs) {
+            log(Array.isArray(data.logs) ? data.logs.join('\n') : data.logs);
+        } else {
+            log(JSON.stringify(data, null, 2));
+        }
+        
+        updateStatus('DEBUG COMPLETE', 'ready');
+        document.getElementById('btn').disabled = false;
+    } catch (err) {
+        log(`❌ BŁĄD DEBUGOWANIA: ${err.message}`);
+        updateStatus('ERROR', 'error');
+        document.getElementById('btn').disabled = false;
+    }
 }
 
 function log(text) {
-    document.getElementById('logs').textContent += "\n" + text + "\n";
+    const logs = document.getElementById('logs');
+    const timestamp = new Date().toLocaleTimeString('pl-PL');
+    logs.textContent += `[${timestamp}] ${text}\n`;
+    logs.scrollTop = logs.scrollHeight;
 }
 
 function initWebSocket() {
-    ws = new WebSocket(`wss://${location.host}/ws/${sid}`);
+    // FIX: Używaj prawidłowego protokołu
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${location.host}/ws/${sid}`;
+    
+    log(`🔌 Łączę WebSocket: ${wsUrl}`);
+    
+    ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+        log("✅ WebSocket połączony!");
+        termLog("# WebSocket connected! Ready for commands.");
+    };
+    
     ws.onmessage = e => {
-        document.getElementById('term-output').textContent += e.data + '\n';
+        termLog(e.data);
+    };
+    
+    ws.onerror = (err) => {
+        log(`❌ WebSocket error: ${err}`);
+        termLog("# ERROR: WebSocket connection failed!");
+    };
+    
+    ws.onclose = () => {
+        log("🔌 WebSocket zamknięty");
+        termLog("# WebSocket disconnected.");
     };
 }
 
+function termLog(text) {
+    document.getElementById('term-output').textContent += '\n' + text;
+    document.getElementById('term-output').scrollTop = 
+        document.getElementById('term-output').scrollHeight;
+}
+
 function sendCmd() {
-    const cmd = document.getElementById('cmd').value;
-    if (ws) ws.send(cmd);
+    const cmd = document.getElementById('cmd').value.trim();
+    if (!cmd) return;
+    
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        termLog("# ERROR: WebSocket not connected!");
+        return;
+    }
+    
+    termLog(`\n> ${cmd}`);
+    ws.send(cmd);
     document.getElementById('cmd').value = "";
 }
+
+// Enter w terminalu
+document.getElementById('cmd').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendCmd();
+});
+
+// Sprawdź health przy załadowaniu
+window.addEventListener('load', async () => {
+    try {
+        const res = await fetch('/health');
+        const health = await res.json();
+        log(`🏥 Health check: ${health.status}`);
+        log(`   OpenAI: ${health.openai_configured ? '✅' : '❌'}`);
+        log(`   Workspace: ${health.workspace_exists ? '✅' : '❌'}`);
+    } catch (err) {
+        log(`⚠️  Health check failed: ${err.message}`);
+    }
+});
 </script>
 </body>
 </html>

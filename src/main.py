@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from src.config.env_config import get_config
 from src.debugger.debugger_loop import start_debug_loop
 from src.rtc.signaling import handle_command
-from src.api.endpoints import router as api_router # Zakładam, że wydzielimy to w przyszłości, ale na razie zostawmy tu logikę dla uproszczenia
+# from src.api.endpoints import router as api_router # Zakładam, że wydzielimy to w przyszłości, ale na razie zostawmy tu logikę dla uproszczenia
 import shutil
 import uuid
 from fastapi import File, UploadFile, HTTPException, WebSocket

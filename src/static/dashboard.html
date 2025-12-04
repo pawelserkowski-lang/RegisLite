@@ -2,7 +2,11 @@
 <html lang="pl">
 <head>
     <meta charset="utf-8">
-    <title>RegisLite 5.0 - Sentient Debugger</title>
+    <title>RegisLite 6.0 - OmniTool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
     <style>
         :root { --accent: #00f2ea; --bg: #0b0d12; --panel: #161b22; --text: #c9d1d9; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -13,47 +17,47 @@
         
         h1 { font-size: 2rem; background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
         
-        /* PROGRESS BAR */
+        /* PROGRESS BAR - ANIMOWANY */
         .progress-container {
-            height: 6px;
-            background: #21262d;
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 15px 0;
-            display: none; /* Ukryty domyślnie */
+            height: 4px; background: #21262d; width: 100%; border-radius: 2px; overflow: hidden; margin-top: 15px; opacity: 0; transition: opacity 0.3s;
         }
         .progress-bar {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, var(--accent), #ff00ff, var(--accent));
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite linear;
-            transform-origin: left;
+            height: 100%; width: 0%; background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            transition: width 0.5s ease;
         }
-        @keyframes loading { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
-        
+        .pulsing { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
         /* STATUS BADGES */
         .meta-bar {
             display: flex; gap: 10px; font-size: 0.8rem; color: #8b949e;
             margin-top: 10px; align-items: center; min-height: 24px;
         }
         .badge {
-            background: #21262d; padding: 2px 8px; border-radius: 4px; border: 1px solid #30363d;
-            display: none;
+            background: #21262d; padding: 2px 8px; border-radius: 4px; border: 1px solid #30363d; display: none;
         }
         .badge.active { display: inline-block; }
-        .status-text { color: var(--accent); font-weight: bold; margin-right: auto; }
+        .model-tag { color: #f2cc60; }
 
-        /* TERMINAL */
+        /* TERMINAL / CHAT */
         #term-output {
-            background: #010409; padding: 15px; border-radius: 6px; height: 400px;
-            overflow-y: auto; font-family: 'Consolas', monospace; font-size: 13px;
-            border: 1px solid #30363d; margin-top: 15px; white-space: pre-wrap;
+            background: #010409; padding: 20px; border-radius: 6px; height: 500px;
+            overflow-y: auto; font-family: 'Consolas', monospace; font-size: 14px;
+            border: 1px solid #30363d; margin-top: 15px;
         }
-        .msg-user { color: #fff; font-weight: bold; margin-top: 10px; }
-        .msg-result { color: #7ee787; }
-        .msg-error { color: #ff7b72; }
-        .msg-progress { color: #8b949e; font-style: italic; }
+        
+        /* Message styles */
+        .msg { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #21262d; }
+        .msg-user { color: #fff; font-weight: bold; border-left: 3px solid var(--accent); padding-left: 10px; }
+        .msg-result { color: #c9d1d9; }
+        .msg-error { color: #ff7b72; border-left: 3px solid #ff7b72; padding-left: 10px; }
+        .msg-progress { color: #8b949e; font-style: italic; font-size: 0.9em; }
+
+        /* Markdown Styles fix */
+        pre { background: #0d1117; padding: 10px; border-radius: 6px; overflow-x: auto; border: 1px solid #30363d; }
+        code { font-family: 'Consolas', monospace; }
+        p { margin-bottom: 8px; }
 
         input[type="text"] {
             width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d;
@@ -62,8 +66,6 @@
         }
         input[type="text"]:focus { outline: none; border-color: var(--accent); }
         
-        /* Upload styling */
-        .upload-area { display: flex; gap: 10px; align-items: center; }
         button {
             padding: 10px 20px; background: #238636; border: none; color: white; border-radius: 6px;
             cursor: pointer; font-weight: 600;
@@ -76,9 +78,9 @@
 
 <div class="container">
     <div class="card">
-        <h1>🤖 RegisLite 5.0 <span style="font-size: 0.5em; color: #8b949e">| Sentient AI Edition</span></h1>
+        <h1>🤖 RegisLite 6.0 <span style="font-size: 0.5em; color: #8b949e">| OmniTool</span></h1>
         
-        <div class="upload-area">
+        <div style="display:flex; gap:10px; align-items:center;">
             <input type="file" id="zip" accept=".zip" style="width: auto">
             <button onclick="upload()">Upload ZIP</button>
             <button onclick="debug()" id="btn-debug" disabled>🔧 Auto-Fix</button>
@@ -87,21 +89,25 @@
 
     <div class="card">
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <h3>💬 Terminal Inteligentny</h3>
-            <div style="font-size: 0.8rem; color: #8b949e">Wpisz cokolwiek - AI zrozumie intencję.</div>
+            <h3>💬 Terminal & Czat (Memory Enabled)</h3>
+            <div style="font-size: 0.8rem; color: #8b949e">Obsługuje Markdown i kolorowanie składni</div>
         </div>
         
-        <input type="text" id="cmd" placeholder="Np: 'pokaż pliki', 'zrób migrację bazy', 'policz silnię z 5'..." autocomplete="off">
+        <input type="text" id="cmd" placeholder="Wpisz komendę lub zapytaj AI..." autocomplete="off">
         
-        <div class="progress-container" id="p-bar"><div class="progress-bar"></div></div>
+        <div class="progress-container" id="p-container">
+            <div class="progress-bar pulsing" id="p-bar"></div>
+        </div>
         
         <div class="meta-bar">
-            <span id="status-text" class="status-text">Ready</span>
-            <span id="badge-model" class="badge">Model: GPT-4o</span>
-            <span id="badge-time" class="badge">Time: 0.00s</span>
+            <span id="status-text" style="color: var(--accent)">Ready</span>
+            <span id="badge-model" class="badge model-tag">Model: -</span>
+            <span id="badge-time" class="badge">Time: -</span>
         </div>
 
-        <div id="term-output"># System gotowy. Wgraj plik lub pisz komendy.</div>
+        <div id="term-output">
+            <div class="msg-progress">> System gotowy. Wgraj projekt, aby rozpocząć.</div>
+        </div>
     </div>
 </div>
 
@@ -109,18 +115,56 @@
 let sid = null;
 let ws = null;
 
+// Konfiguracja marked.js
+marked.setOptions({
+    highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+    }
+});
+
 function log(text, type='result') {
     const out = document.getElementById('term-output');
     const div = document.createElement('div');
-    div.className = 'msg-' + type;
-    div.textContent = text;
+    div.className = 'msg';
+    
+    if (type === 'user') {
+        div.innerHTML = `<div class="msg-user">${text}</div>`;
+    } else if (type === 'progress') {
+        div.innerHTML = `<div class="msg-progress">${text}</div>`;
+    } else if (type === 'error') {
+        div.innerHTML = `<div class="msg-error">${text}</div>`;
+    } else {
+        // Render Markdown for results
+        div.className += ' msg-result';
+        div.innerHTML = marked.parse(text);
+    }
+    
     out.appendChild(div);
     out.scrollTop = out.scrollHeight;
+    
+    // Highlight code blocks after render
+    div.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+    });
 }
 
-function setStatus(text, loading=false) {
-    document.getElementById('status-text').textContent = text;
-    document.getElementById('p-bar').style.display = loading ? 'block' : 'none';
+function updateProgress(percent, text) {
+    const cont = document.getElementById('p-container');
+    const bar = document.getElementById('p-bar');
+    const stat = document.getElementById('status-text');
+    
+    if (percent > 0) {
+        cont.style.opacity = 1;
+        bar.style.width = percent + '%';
+        stat.textContent = text;
+    } else {
+        cont.style.opacity = 0;
+        bar.style.width = '0%';
+        stat.textContent = "Ready";
+    }
 }
 
 function setMeta(model, time) {
@@ -128,11 +172,11 @@ function setMeta(model, time) {
     const bt = document.getElementById('badge-time');
     
     if (model && model !== '-') {
-        bm.textContent = `Model: ${model}`;
-        bm.className = 'badge active';
+        bm.textContent = `AI: ${model}`;
+        bm.className = 'badge active model-tag';
     }
     if (time) {
-        bt.textContent = `Latency: ${time}`;
+        bt.textContent = `Lat: ${time}`;
         bt.className = 'badge active';
     }
 }
@@ -141,7 +185,7 @@ async function upload() {
     const file = document.getElementById('zip').files[0];
     if (!file) return alert("Wybierz plik!");
     
-    setStatus("Wysyłanie...", true);
+    updateProgress(30, "Wysyłanie...");
     const form = new FormData(); form.append("file", file);
     
     try {
@@ -150,21 +194,23 @@ async function upload() {
         if(!res.ok) throw new Error(data.detail);
         
         sid = data.session_id;
-        log(`✅ Sesja: ${sid}`, 'result');
+        log(`✅ Sesja utworzona: ${sid}`, 'progress');
         document.getElementById('btn-debug').disabled = false;
         initWS();
-        setStatus("Połączono. Czekam na rozkazy.");
+        updateProgress(0, "Ready");
     } catch(e) {
-        log(`❌ Błąd: ${e.message}`, 'error');
-        setStatus("Błąd uploadu");
+        log(e.message, 'error');
+        updateProgress(0, "Błąd");
     }
 }
 
 async function debug() {
-    log("🚀 Uruchamiam auto-naprawę...", 'user');
+    log("🚀 Uruchamiam Auto-Fixer...", 'user');
     fetch(`/debug/${sid}`, { method: "POST" })
         .then(r => r.json())
-        .then(d => log(JSON.stringify(d, null, 2)))
+        .then(d => {
+            d.forEach(l => log(l, 'progress'));
+        })
         .catch(e => log(e.message, 'error'));
 }
 
@@ -175,21 +221,22 @@ function initWS() {
             const msg = JSON.parse(e.data);
             
             if (msg.type === 'progress') {
-                setStatus(msg.content, true);
-                log(`> ${msg.content}`, 'progress');
+                updateProgress(60, msg.content);
+                // Opcjonalnie: loguj progress też do czatu
+                // log(msg.content, 'progress');
             } else if (msg.type === 'result') {
-                setStatus("Gotowe.");
+                updateProgress(0, "Ready");
                 log(msg.content, 'result');
                 setMeta(msg.meta.model, msg.meta.duration);
             } else if (msg.type === 'error') {
-                setStatus("Błąd!");
+                updateProgress(0, "Error");
                 log(msg.content, 'error');
             }
         } catch {
-            log(e.data, 'result'); // Fallback dla starego formatu
+            log(e.data, 'result');
         }
     };
-    ws.onclose = () => setStatus("Rozłączono", false);
+    ws.onclose = () => updateProgress(0, "Rozłączono");
 }
 
 document.getElementById('cmd').addEventListener('keypress', (e) => {
@@ -198,10 +245,10 @@ document.getElementById('cmd').addEventListener('keypress', (e) => {
         if (!val) return;
         if (!ws) return alert("Najpierw wgraj projekt!");
         
-        log(`user: ${val}`, 'user');
+        log(val, 'user');
         ws.send(val);
         e.target.value = '';
-        setStatus("Myślę...", true);
+        updateProgress(20, "Wysłano...");
     }
 });
 </script>

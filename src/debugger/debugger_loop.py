@@ -5,64 +5,92 @@ from .debugger_fix import generate_patches
 from .debugger_patcher import apply_patches
 
 async def start_debug_loop(session_id: str):
-    # --- Pętla naprawiona: obsługuje session_id ---
-    project_path = f'workspace/{session_id}/project'
+    project_path = f"workspace/{session_id}/project"
     logs = []
-    logs.append(f'🔍 Start sesji {session_id}...')
+    
+    def log(msg):
+        logs.append(msg)
 
+    log(f"🔍 Start sesji {session_id}...")
     if not os.path.exists(project_path):
-        logs.append('❌ BŁĄD: Brak projektu!')
+        log("❌ BŁĄD: Brak projektu!")
         return logs
 
     MAX_ROUNDS = 5
-    mode = 'FIX'
+    previous_patches = [] # Pamięć co już robiliśmy
 
     for i in range(1, MAX_ROUNDS + 1):
-        logs.append(f'\n--- 🔄 RUNDA {i}/{MAX_ROUNDS} ---')
-        files = scan_project(project_path)
-        if not files:
-            logs.append('⚠️ Pusty projekt.')
+        log(f"\n--- 🔄 RUNDA {i}/{MAX_ROUNDS} ---")
+        
+        # 1. Pełny skan
+        all_files = scan_project(project_path)
+        if not all_files:
+            log("⚠️ Pusty projekt.")
             break
 
-        # Wykrywanie FIXME
+        # 2. Filtracja kontekstu (OSZCZĘDNOŚĆ TOKENÓW!)
+        context_files = []
         explicit_targets = []
-        for f in files:
-            content = f.get('content', '')
-            if any(tag in content for tag in ['FIXME', 'TODO', 'BUG']):
-                explicit_targets.append(f['path'])
+        
+        # Szukamy znaczników błędów
+        for f in all_files:
+            content = f.get("content", "")
+            path = f["path"]
+            
+            has_tag = any(tag in content for tag in ["FIXME", "TODO", "BUG", "ERROR"])
+            # Pliki edytowane w poprzedniej rundzie też bierzemy do kontekstu
+            was_edited = any(p in path for p in previous_patches)
+            
+            if has_tag:
+                explicit_targets.append(path)
+            
+            if has_tag or was_edited or i == 1:
+                # W 1. rundzie bierzemy wszystko (lub limit), w kolejnych tylko istotne
+                context_files.append(f)
 
-        errors = []
+        # Jeśli runda > 1 i nie ma żadnych punktów zaczepienia -> koniec
+        if i > 1 and not context_files and not explicit_targets:
+            log("✅ Brak nowych celów do naprawy.")
+            break
+            
+        # Jeśli kontekst jest pusty (np. runda 2, brak błędów), ale kod działa -> OK
+        if not context_files:
+            # Fallback: weź main.py lub app.py żeby sprawdzić czy działa
+            context_files = [f for f in all_files if "main" in f["path"] or "app" in f["path"]]
+
+        log(f"📉 Zoptymalizowany kontekst: {len(context_files)} plików (z {len(all_files)})")
+        
+        # 3. Decyzja o trybie
+        errors_desc = []
         if explicit_targets:
-            logs.append(f'🎯 Znaleziono znaczniki w {len(explicit_targets)} plikach.')
-            errors = explicit_targets
-            mode = 'FIX'
+            log(f"🎯 Znaleziono znaczniki w: {explicit_targets}")
+            errors_desc = explicit_targets
         else:
             if i == 1:
-                logs.append('🕵️ Brak znaczników. Tryb: AUDYT...')
-                errors = ['AUDYT_OGOLNY: Przeanalizuj kod, znajdź błędy logiczne.']
-                mode = 'AUDIT'
+                log("🕵️ Tryb AUDYT (szukam ukrytych błędów)...")
+                errors_desc = ["AUDYT_OGOLNY: Kod działa? Są błędy logiczne?"]
             else:
-                logs.append('✅ Projekt czysty.')
+                log("✅ Projekt wygląda na czysty.")
                 break
 
-        # Generowanie
-        patches_text = await generate_patches(str(errors), files)
-        if 'NO_CHANGES_NEEDED' in patches_text:
-            logs.append('✅ AI zatwierdziło kod.')
+        # 4. Generowanie (AI)
+        patches_text = await generate_patches(str(errors_desc), context_files)
+        
+        if "NO_CHANGES_NEEDED" in patches_text:
+            log("✅ AI zatwierdziło kod.")
             break
-        if 'LLM error' in patches_text:
-            logs.append(f'❌ Błąd AI: {patches_text}')
+        if "LLM error" in patches_text:
+            log(f"❌ Błąd AI: {patches_text}")
             break
 
-        # Aplikowanie
-        changed = apply_patches(patches_text, project_path)
-        if changed:
-            logs.append(f'🛠️ Naprawiono: {changed}')
+        # 5. Aplikowanie
+        changed_files = apply_patches(patches_text, project_path)
+        if changed_files:
+            log(f"🛠️ Naprawiono: {changed_files}")
+            previous_patches = changed_files # Zapamiętaj co zmieniliśmy
         else:
-            if mode == 'AUDIT':
-                logs.append('ℹ️ Audyt zakończony (brak zmian).')
-                break
-            logs.append('⚠️ AI nie podało poprawnych zmian.')
+            log("⚠️ AI nie podało poprawnych zmian.")
+            if i > 1: break # Jak w kolejnej rundzie nic nie wymyślił, to koniec
 
-    logs.append('\n🏁 Koniec.')
+    log("\n🏁 Koniec debugowania.")
     return logs

@@ -1,0 +1,2 @@
+python renowacja.py
+pause

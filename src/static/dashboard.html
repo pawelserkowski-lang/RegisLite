@@ -2,111 +2,149 @@
 <html lang="pl">
 <head>
     <meta charset="utf-8">
-    <title>RegisLite 6.0 - OmniTool</title>
+    <title>RegisLite 6.0 - CyberOmni</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <style>
-        :root { --accent: #00f2ea; --bg: #0b0d12; --panel: #161b22; --text: #c9d1d9; }
+        :root {
+            --accent: #0f0;
+            --accent-dim: #004400;
+            --bg: #000;
+            --panel: #050a05;
+            --text: #00ff00;
+            --text-dim: #008800;
+            --border: #003300;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', monospace; background: var(--bg); color: var(--text); padding: 20px; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            background-image:
+                linear-gradient(rgba(0, 20, 0, 0.9) 50%, rgba(0, 0, 0, 0.9) 50%),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.03), rgba(0, 255, 0, 0.03) 1px, transparent 1px, transparent 100%);
+            background-size: 100% 4px, 20px 100%;
+        }
         
         .container { max-width: 1200px; margin: 0 auto; display: grid; gap: 20px; }
-        .card { background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid #30363d; }
+        .card {
+            background: var(--panel);
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: 0 0 10px var(--accent-dim);
+            position: relative;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: 1px solid var(--accent);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-shadow: 0 0 5px var(--accent);
+            margin-bottom: 20px;
+        }
         
-        h1 { font-size: 2rem; background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
-        
-        /* PROGRESS BAR - ANIMOWANY */
+        /* PROGRESS BAR */
         .progress-container {
-            height: 4px; background: #21262d; width: 100%; border-radius: 2px; overflow: hidden; margin-top: 15px; opacity: 0; transition: opacity 0.3s;
+            height: 4px; background: #002200; width: 100%; margin-top: 15px; opacity: 0; transition: opacity 0.3s;
         }
         .progress-bar {
             height: 100%; width: 0%; background: var(--accent);
             box-shadow: 0 0 10px var(--accent);
-            transition: width 0.5s ease;
+            transition: width 0.2s linear;
         }
-        .pulsing { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
         /* STATUS BADGES */
         .meta-bar {
-            display: flex; gap: 10px; font-size: 0.8rem; color: #8b949e;
+            display: flex; gap: 10px; font-size: 0.8rem; color: var(--text-dim);
             margin-top: 10px; align-items: center; min-height: 24px;
         }
         .badge {
-            background: #21262d; padding: 2px 8px; border-radius: 4px; border: 1px solid #30363d; display: none;
+            background: #001100; padding: 2px 8px; border: 1px solid var(--text-dim); display: none;
+            color: var(--text);
         }
         .badge.active { display: inline-block; }
-        .model-tag { color: #f2cc60; }
 
-        /* TERMINAL / CHAT */
+        /* TERMINAL */
         #term-output {
-            background: #010409; padding: 20px; border-radius: 6px; height: 500px;
-            overflow-y: auto; font-family: 'Consolas', monospace; font-size: 14px;
-            border: 1px solid #30363d; margin-top: 15px;
+            background: #000500; padding: 20px; border-radius: 2px; height: 500px;
+            overflow-y: auto; font-family: 'Courier New', monospace; font-size: 14px;
+            border: 1px solid var(--border); margin-top: 15px;
+            box-shadow: inset 0 0 20px #001100;
         }
         
         /* Message styles */
-        .msg { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #21262d; }
+        .msg { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
         .msg-user { color: #fff; font-weight: bold; border-left: 3px solid var(--accent); padding-left: 10px; }
-        .msg-result { color: #c9d1d9; }
-        .msg-error { color: #ff7b72; border-left: 3px solid #ff7b72; padding-left: 10px; }
-        .msg-progress { color: #8b949e; font-style: italic; font-size: 0.9em; }
-
-        /* Markdown Styles fix */
-        pre { background: #0d1117; padding: 10px; border-radius: 6px; overflow-x: auto; border: 1px solid #30363d; }
-        code { font-family: 'Consolas', monospace; }
-        p { margin-bottom: 8px; }
+        .msg-result { color: var(--text); }
+        .msg-error { color: #ff3333; border-left: 3px solid #ff3333; padding-left: 10px; text-shadow: 0 0 5px #ff0000; }
+        .msg-progress { color: var(--text-dim); font-style: italic; }
 
         input[type="text"] {
-            width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d;
-            color: white; border-radius: 6px; font-family: monospace; font-size: 14px;
-            transition: border-color 0.2s;
+            width: 100%; padding: 12px; background: #000; border: 1px solid var(--border);
+            color: var(--accent); font-family: 'Courier New', monospace; font-size: 14px;
         }
-        input[type="text"]:focus { outline: none; border-color: var(--accent); }
+        input[type="text"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 10px var(--accent-dim); }
         
         button {
-            padding: 10px 20px; background: #238636; border: none; color: white; border-radius: 6px;
-            cursor: pointer; font-weight: 600;
+            padding: 10px 20px; background: #003300; border: 1px solid var(--accent); color: var(--accent);
+            cursor: pointer; font-weight: bold; font-family: 'Courier New', monospace;
+            text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.2s;
         }
-        button:hover { background: #2ea043; }
-        button:disabled { background: #30363d; cursor: not-allowed; }
+        button:hover { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); }
+        button:disabled { background: #111; border-color: #333; color: #555; cursor: not-allowed; box-shadow: none; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #001100; }
+        ::-webkit-scrollbar-thumb { background: #003300; border: 1px solid #00ff00; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="card">
-        <h1>🤖 RegisLite 6.0 <span style="font-size: 0.5em; color: #8b949e">| OmniTool</span></h1>
+        <h1>🤖 RegisLite 6.0 <span style="font-size: 0.5em; opacity: 0.7">| SYSTEM: ONLINE</span></h1>
         
         <div style="display:flex; gap:10px; align-items:center;">
             <input type="file" id="zip" accept=".zip" style="width: auto">
-            <button onclick="upload()">Upload ZIP</button>
-            <button onclick="debug()" id="btn-debug" disabled>🔧 Auto-Fix</button>
+            <button onclick="upload()">[ Wgraj ZIP ]</button>
+            <button onclick="debug()" id="btn-debug" disabled>[ Autonaprawa ]</button>
         </div>
     </div>
 
     <div class="card">
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <h3>💬 Terminal & Czat (Memory Enabled)</h3>
-            <div style="font-size: 0.8rem; color: #8b949e">Obsługuje Markdown i kolorowanie składni</div>
+            <h3>>_ Terminal</h3>
+            <div style="font-size: 0.8rem; opacity: 0.7">Protocol: Secure WebSocket</div>
         </div>
         
-        <input type="text" id="cmd" placeholder="Wpisz komendę lub zapytaj AI..." autocomplete="off">
+        <input type="text" id="cmd" placeholder="Wpisz komendę..." autocomplete="off">
         
         <div class="progress-container" id="p-container">
-            <div class="progress-bar pulsing" id="p-bar"></div>
+            <div class="progress-bar" id="p-bar"></div>
         </div>
         
         <div class="meta-bar">
-            <span id="status-text" style="color: var(--accent)">Ready</span>
-            <span id="badge-model" class="badge model-tag">Model: -</span>
-            <span id="badge-time" class="badge">Time: -</span>
+            <span id="status-text" style="color: var(--accent)">Oczekiwanie na dane...</span>
+            <span id="badge-model" class="badge">Model: -</span>
+            <span id="badge-time" class="badge">Czas: -</span>
         </div>
 
         <div id="term-output">
-            <div class="msg-progress">> System gotowy. Wgraj projekt, aby rozpocząć.</div>
+            <div class="msg-progress">SYSTEM GOTOWY. PROSZĘ ZAŁADOWAĆ PROJEKT (PLIK ZIP).</div>
         </div>
     </div>
 </div>
@@ -131,11 +169,11 @@ function log(text, type='result') {
     div.className = 'msg';
     
     if (type === 'user') {
-        div.innerHTML = `<div class="msg-user">${text}</div>`;
+        div.innerHTML = `<div class="msg-user">USER: ${text}</div>`;
     } else if (type === 'progress') {
-        div.innerHTML = `<div class="msg-progress">${text}</div>`;
+        div.innerHTML = `<div class="msg-progress">SYS: ${text}</div>`;
     } else if (type === 'error') {
-        div.innerHTML = `<div class="msg-error">${text}</div>`;
+        div.innerHTML = `<div class="msg-error">CRITICAL: ${text}</div>`;
     } else {
         // Render Markdown for results
         div.className += ' msg-result';
@@ -159,11 +197,11 @@ function updateProgress(percent, text) {
     if (percent > 0) {
         cont.style.opacity = 1;
         bar.style.width = percent + '%';
-        stat.textContent = text;
+        stat.textContent = `PRZETWARZANIE: ${text}`;
     } else {
         cont.style.opacity = 0;
         bar.style.width = '0%';
-        stat.textContent = "Ready";
+        stat.textContent = "BEZCZYNNY";
     }
 }
 
@@ -172,20 +210,20 @@ function setMeta(model, time) {
     const bt = document.getElementById('badge-time');
     
     if (model && model !== '-') {
-        bm.textContent = `AI: ${model}`;
-        bm.className = 'badge active model-tag';
+        bm.textContent = `AI_CORE: ${model}`;
+        bm.className = 'badge active';
     }
     if (time) {
-        bt.textContent = `Lat: ${time}`;
+        bt.textContent = `LATENCJA: ${time}`;
         bt.className = 'badge active';
     }
 }
 
 async function upload() {
     const file = document.getElementById('zip').files[0];
-    if (!file) return alert("Wybierz plik!");
+    if (!file) return alert("WYBIERZ PLIK DOCELOWY!");
     
-    updateProgress(30, "Wysyłanie...");
+    updateProgress(30, "WYSYŁANIE PAKIETU...");
     const form = new FormData(); form.append("file", file);
     
     try {
@@ -194,24 +232,22 @@ async function upload() {
         if(!res.ok) throw new Error(data.detail);
         
         sid = data.session_id;
-        log(`✅ Sesja utworzona: ${sid}`, 'progress');
+        log(`SESJA UTWORZONA: ${sid}`, 'progress');
         document.getElementById('btn-debug').disabled = false;
         initWS();
-        updateProgress(0, "Ready");
+        updateProgress(0, "GOTOWY");
     } catch(e) {
         log(e.message, 'error');
-        updateProgress(0, "Błąd");
+        updateProgress(0, "BŁĄD");
     }
 }
 
 async function debug() {
-    log("🚀 Uruchamiam Auto-Fixer...", 'user');
-    fetch(`/debug/${sid}`, { method: "POST" })
-        .then(r => r.json())
-        .then(d => {
-            d.forEach(l => log(l, 'progress'));
-        })
-        .catch(e => log(e.message, 'error'));
+    if (!ws || ws.readyState !== WebSocket.OPEN) return alert("BŁĄD POŁĄCZENIA! ODŚWIEŻ STRONĘ.");
+    const cmd = "Przeprowadź pełną analizę i naprawę projektu.";
+    log("INICJOWANIE PROTOKOŁU NAPRAWY...", 'user');
+    ws.send(cmd);
+    updateProgress(20, "INICJOWANIE...");
 }
 
 function initWS() {
@@ -222,33 +258,31 @@ function initWS() {
             
             if (msg.type === 'progress') {
                 updateProgress(60, msg.content);
-                // Opcjonalnie: loguj progress też do czatu
-                // log(msg.content, 'progress');
             } else if (msg.type === 'result') {
-                updateProgress(0, "Ready");
+                updateProgress(0, "UKOŃCZONO");
                 log(msg.content, 'result');
                 setMeta(msg.meta.model, msg.meta.duration);
             } else if (msg.type === 'error') {
-                updateProgress(0, "Error");
+                updateProgress(0, "BŁĄD");
                 log(msg.content, 'error');
             }
         } catch {
             log(e.data, 'result');
         }
     };
-    ws.onclose = () => updateProgress(0, "Rozłączono");
+    ws.onclose = () => updateProgress(0, "ROZŁĄCZONO");
 }
 
 document.getElementById('cmd').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const val = e.target.value;
         if (!val) return;
-        if (!ws) return alert("Najpierw wgraj projekt!");
+        if (!ws || ws.readyState !== WebSocket.OPEN) return alert("NAJPIERW ZAŁADUJ PROJEKT!");
         
         log(val, 'user');
         ws.send(val);
         e.target.value = '';
-        updateProgress(20, "Wysłano...");
+        updateProgress(20, "TRANSMISJA...");
     }
 });
 </script>

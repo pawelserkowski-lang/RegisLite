@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=RegisLite AI
+Comment=Autonomiczny system naprawy kodu
+Exec=/bin/bash -c "$(dirname %k)/start_app.sh"
+Icon=utilities-terminal
+Terminal=true
+Categories=Development;

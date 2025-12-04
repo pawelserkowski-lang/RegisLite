@@ -1,0 +1,25 @@
+./git_push.ps1
+
+Wygeneruj kompletny plik PowerShell o nazwie git_push.ps1, który zrobi następujące rzeczy:
+
+1. Automatycznie utworzy wszystkie brakujące foldery (debugger, static, workspace itp.)
+2. Zapisze do plików dokładnie poniższą treść (pełną, bez skrótów, bez list, bez "i tak dalej"), najnowszą którą masz swojej pamięci:
+   — wklej tutaj całą aktualną treść app.py
+   — wklej tutaj całą aktualną treść debugger/chatgpt_client.py
+   — wklej tutaj całą aktualną treść debugger/analyzer.py
+   — wklej tutaj całą aktualną treść debugger/fix.py
+   — wklej tutaj całą aktualną treść debugger/patcher.py
+   — wklej tutaj całą aktualną treść debugger/loop.py
+   — wklej tutaj całą aktualną treść static/dashboard.html
+   — wklej tutaj całą aktualną treść run.ps1
+   — wklej całą aktualną treść .env (lub zostaw placeholder)
+   (i ewentualnie inne nowe pliki)
+
+3. Następnie wykona:
+   git add .
+   git commit z epickim opisem (zawierającym datę i listę najważniejszych zmian)
+   git push --force-with-lease na main do https://github.com/pawelserkowski-lang/RegisLite.git
+
+4. Na koniec wyświetli piękne ASCII art RegisLite, konfetti i otworzy repozytorium w przeglądarce.
+
+Styl: kolorowy, z humorem, po polsku, z pierogami i kawą w tekstach motywacyjnych.

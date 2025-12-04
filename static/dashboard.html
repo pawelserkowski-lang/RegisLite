@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RegisLite – Polski AI Debugger</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: system-ui; margin: 40px; background: #0d1117; color: #c9d1d9; }
+        .card { background: #161b22; padding: 30px; border-radius: 12px; max-width: 800px; margin: auto; }
+        button { padding: 12px 24px; font-size: 18px; background: #238636; border: none; border-radius: 8px; color: white; cursor: pointer; }
+        button:hover { background: #2ea043; }
+        #logs { background: #010409; padding: 20px; margin-top: 20px; border-radius: 8px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>RegisLite v4.0</h1>
+    <p>Wrzuć ZIP-a z kodem, a ja go naprawię (no prawie)</p>
+    
+    <input type="file" id="zipfile" accept=".zip"><br><br>
+    <button onclick="upload()">Upload ZIP</button>
+    <button onclick="startDebug()" id="debugBtn" disabled>Start Debug</button>
+    
+    <div id="logs"></div>
+</div>
+
+<script>
+let sessionId = null;
+async function upload() {
+    const file = document.getElementById('zipfile').files[0];
+    const form = new FormData();
+    form.append('file', file);
+    
+    const res = await fetch('/upload', {method: 'POST', body: form});
+    const data = await res.json();
+    sessionId = data.session_id;
+    log(`Session: ${sessionId} – gotowy do debugowania!`);
+    document.getElementById('debugBtn').disabled = false;
+}
+
+async function startDebug() {
+    const res = await fetch(`/debug/${sessionId}`, {method: 'POST'});
+    const data = await res.json();
+    log(data.logs);
+}
+
+function log(text) {
+    document.getElementById('logs').textContent += text + "\n\n";
+}
+</script>
+</body>
+</html>

@@ -1,47 +1,48 @@
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import HTMLResponse
-from rtc.signaling import router as rtc_router
-from debugger.debugger_loop import start_debug_loop
-import zipfile
-import shutil
+# app.py
 import os
+import shutil
+from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from dotenv import load_dotenv
+from debugger.loop import start_debug_loop
+import uuid
+
+load_dotenv()
 
 app = FastAPI()
-
-# Podpinamy dodatkowy router (na razie prosty placeholder)
-app.include_router(rtc_router)
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
-def home():
-    """Zwraca prosty panel HTML."""
-    with open("static/index.html", "r", encoding="utf8") as f:
+async def root():
+    with open("static/dashboard.html", encoding="utf-8") as f:
         return f.read()
 
+@app.post("/upload")
+async def upload_zip(file: UploadFile = File(...)):
+    session_id = str(uuid.uuid4())[:8]
+    workspace = f"workspace/{session_id}"
+    os.makedirs(workspace, exist_ok=True)
+    
+    zip_path = f"{workspace}/upload.zip"
+    with open(zip_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    
+    shutil.unpack_archive(zip_path, f"{workspace}/project")
+    
+    return {"session_id": session_id, "message": "ZIP wgrany – kliknij Start Debug!"}
 
-@app.post("/upload_zip")
-async def upload_zip(f: UploadFile = File(...)):
-    """Upload ZIP z projektem i rozpakowanie do workspace/project."""
-    os.makedirs("workspace", exist_ok=True)
-    zip_path = os.path.join("workspace", "incoming.zip")
+@app.post("/debug/{session_id}")
+async def debug(session_id: str):
+    result = await start_debug_loop(session_id)
+    return result
 
-    # Zapis pliku
-    with open(zip_path, "wb") as w:
-        w.write(await f.read())
-
-    project_dir = os.path.join("workspace", "project")
-    if os.path.exists(project_dir):
-        shutil.rmtree(project_dir)
-    os.makedirs(project_dir, exist_ok=True)
-
-    with zipfile.ZipFile(zip_path, "r") as z:
-        z.extractall(project_dir)
-
-    return {"status": "uploaded_and_extracted", "project_dir": project_dir}
-
-
-@app.get("/start_debug")
-async def start_debug():
-    """Start pętli debuggera."""
-    logs = await start_debug_loop()
-    return {"logs": logs}
+@app.websocket("/ws/{session_id}")
+async def websocket_endpoint(websocket: WebSocket, session_id: str):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(f"RegisLite mowi: {data}")
+    except WebSocketDisconnect:
+        pass

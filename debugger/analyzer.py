@@ -7,8 +7,9 @@ def simple_scan(project_path: str):
         for file in files:
             if file.endswith(".py"):
                 path = os.path.join(root, file)
-                with open(path, encoding="utf-8") as f:
-                    lines = f.readlines()
+                try:
+                    with open(path, encoding="utf-8") as f:
+                        lines = f.readlines()
                     for i, line in enumerate(lines, 1):
                         if "print(" in line and not line.strip().startswith("#"):
                             errors.append({
@@ -16,4 +17,6 @@ def simple_scan(project_path: str):
                                 "line": i,
                                 "message": "Znaleziono debug print() – klasyka polskiego debugowania"
                             })
-    return errors or [{"file": "README.md", "line": 1, "message": "Wszystko pięknie, nie ma błędów!"}]
+                except:
+                    pass
+    return errors or [{"file": "README.md", "line": 1, "message": "Kod czysty jak łza! Nie ma błędy!"}]

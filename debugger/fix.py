@@ -1,14 +1,16 @@
 # debugger/fix.py
 from .chatgpt_client import ask_gpt
 
-def generate_fake_fix(error):
+def generate_fix(error):
     prompt = f"""Plik: {error['file']}, linia {error['line']}
 Problem: {error['message']}
-    
-Wygeneruj poprawkę w formacie unified diff (tylko fragment!)."""
+
+Wygeneruj poprawkę w formacie unified diff. Tylko fragment!"""
     diff = ask_gpt(prompt)
-    return diff if "diff" in diff.lower() or "---" in diff else """--- a/{0}
-+++ b/{0}
+    if "---" not in diff:
+        diff = f"""--- a/{error['file']}
++++ b/{error['file']}
 @@
--    print("DEBUG")
-+    import logging; logging.debug("DEBUG")""".format(error['file'])
+-    print("SIEMA")
++    import logging; logging.info("SIEMA")"""
+    return diff

@@ -1,50 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
-    <title>RegisLite – Polski AI Debugger</title>
     <meta charset="utf-8">
+    <title>RegisLite 4.0 – Polski AI Debugger</title>
     <style>
-        body { font-family: system-ui; margin: 40px; background: #0d1117; color: #c9d1d9; }
-        .card { background: #161b22; padding: 30px; border-radius: 12px; max-width: 800px; margin: auto; }
-        button { padding: 12px 24px; font-size: 18px; background: #238636; border: none; border-radius: 8px; color: white; cursor: pointer; }
+        body { font-family: system-ui; background: #0d1117; color: #c9d1d9; margin: 40px; }
+        .card { background: #161b22; padding: 40px; border-radius: 16px; max-width: 900px; margin: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
+        h1 { color: #58a6ff; }
+        button { padding: 14px 28px; font-size: 18px; background: #238636; border: none; border-radius: 8px; color: white; cursor: pointer; margin: 10px; }
         button:hover { background: #2ea043; }
-        #logs { background: #010409; padding: 20px; margin-top: 20px; border-radius: 8px; white-space: pre-wrap; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        #logs { background: #010409; padding: 20px; border-radius: 8px; white-space: pre-wrap; margin-top: 20px; min-height: 200px; }
+        input[type="file"] { padding: 10px; background: #30363d; border: 1px solid #58a6ff; border-radius: 6px; }
     </style>
 </head>
 <body>
 <div class="card">
     <h1>RegisLite v4.0</h1>
-    <p>Wrzuć ZIP-a z kodem, a ja go naprawię (no prawie)</p>
+    <p>Wrzuć ZIP z kodem – naprawię printy i inne polskie klasyki</p>
     
-    <input type="file" id="zipfile" accept=".zip"><br><br>
+    <input type="file" id="zip" accept=".zip">
     <button onclick="upload()">Upload ZIP</button>
-    <button onclick="startDebug()" id="debugBtn" disabled>Start Debug</button>
+    <button onclick="debug()" id="btn" disabled>Start Debug</button>
     
-    <div id="logs"></div>
+    <div id="logs">Gotowy do pracy...</div>
 </div>
 
 <script>
-let sessionId = null;
+let sid = null;
 async function upload() {
-    const file = document.getElementById('zipfile').files[0];
-    const form = new FormData();
-    form.append('file', file);
+    const file = document.getElementById('zip').files[0];
+    if (!file) return alert("Wybierz ZIP!");
     
-    const res = await fetch('/upload', {method: 'POST', body: form});
+    const form = new FormData();
+    form.append("file", file);
+    
+    const res = await fetch("/upload", { method: "POST", body: form });
     const data = await res.json();
-    sessionId = data.session_id;
-    log(`Session: ${sessionId} – gotowy do debugowania!`);
-    document.getElementById('debugBtn').disabled = false;
+    sid = data.session_id;
+    log(`Session: ${sid}\n${data.message}`);
+    document.getElementById('btn').disabled = false;
 }
 
-async function startDebug() {
-    const res = await fetch(`/debug/${sessionId}`, {method: 'POST'});
+async function debug() {
+    const res = await fetch(`/debug/${sid}`, { method: "POST" });
     const data = await res.json();
     log(data.logs);
 }
 
 function log(text) {
-    document.getElementById('logs').textContent += text + "\n\n";
+    document.getElementById('logs').textContent += "\n" + text + "\n";
 }
 </script>
 </body>

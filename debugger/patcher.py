@@ -4,7 +4,6 @@ import shutil
 
 def apply_patch(session_id: str, diff: str):
     workspace = f"workspace/{session_id}"
-    project = f"{workspace}/project"
-    backup = f"{workspace}/backups/backup_{os.urandom(4).hex()}"
-    shutil.copytree(project, backup)
-    return {"backup_created": backup, "applied": "FAKE PATCH – działa!"}
+    backup_dir = f"{workspace}/backups/backup_{os.urandom(4).hex()}"
+    shutil.copytree(f"{workspace}/project", backup_dir)
+    return {"backup": backup_dir, "status": "FAKE PATCH ZASTOSOWANY (backup zrobiony)"}

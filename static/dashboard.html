@@ -2,174 +2,106 @@
 <html lang="pl">
 <head>
     <meta charset="utf-8">
-    <title>RegisLite 4.5 – Polski AI Debugger</title>
-    <script src="https://unpkg.com/simple-peer@9.11.1/simplepeer.min.js"></script>
+    <title>RegisLite 5.0 - Sentient Debugger</title>
     <style>
+        :root { --accent: #00f2ea; --bg: #0b0d12; --panel: #161b22; --text: #c9d1d9; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', system-ui, sans-serif; 
-            background: linear-gradient(135deg, #0d1117 0%, #1a1e2e 100%); 
-            color: #c9d1d9; 
-            padding: 20px; 
-            min-height: 100vh;
-        }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .card { 
-            background: #161b22; 
-            padding: 40px; 
-            border-radius: 16px; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-            margin-bottom: 20px;
-        }
-        h1 { 
-            color: #58a6ff; 
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
-        }
-        .subtitle {
-            color: #8b949e;
-            margin-bottom: 30px;
-            font-size: 1.1rem;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-        .status-ready { background: #238636; color: white; }
-        .status-working { background: #d29922; color: white; }
-        .status-error { background: #da3633; color: white; }
+        body { font-family: 'Segoe UI', monospace; background: var(--bg); color: var(--text); padding: 20px; }
         
-        button { 
-            padding: 14px 28px; 
-            font-size: 18px; 
-            background: #238636; 
-            border: none; 
-            border-radius: 8px; 
-            color: white; 
-            cursor: pointer; 
-            margin: 10px 10px 10px 0; 
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-        button:hover { 
-            background: #2ea043; 
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.4);
-        }
-        button:disabled { 
-            background: #555; 
-            cursor: not-allowed;
-            transform: none;
-        }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; gap: 20px; }
+        .card { background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid #30363d; }
         
-        #logs { 
-            background: #010409; 
-            padding: 20px; 
-            border-radius: 8px; 
-            white-space: pre-wrap; 
-            margin-top: 20px; 
-            min-height: 300px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            overflow-y: auto;
-            max-height: 500px;
-            border: 1px solid #30363d;
-        }
+        h1 { font-size: 2rem; background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
         
-        #terminal { 
-            background: #0d1117; 
-            padding: 20px; 
-            border: 2px solid #58a6ff; 
-            border-radius: 8px; 
-            margin-top: 20px; 
+        /* PROGRESS BAR */
+        .progress-container {
+            height: 6px;
+            background: #21262d;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 15px 0;
+            display: none; /* Ukryty domyślnie */
         }
-        .terminal-header {
-            color: #58a6ff;
-            font-weight: 600;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
+        .progress-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--accent), #ff00ff, var(--accent));
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite linear;
+            transform-origin: left;
         }
-        #cmd { 
-            width: calc(100% - 120px); 
-            padding: 12px; 
-            background: #30363d; 
-            border: 1px solid #58a6ff; 
-            color: white;
-            border-radius: 6px;
-            font-family: 'Consolas', monospace;
-            font-size: 14px;
+        @keyframes loading { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+        
+        /* STATUS BADGES */
+        .meta-bar {
+            display: flex; gap: 10px; font-size: 0.8rem; color: #8b949e;
+            margin-top: 10px; align-items: center; min-height: 24px;
         }
+        .badge {
+            background: #21262d; padding: 2px 8px; border-radius: 4px; border: 1px solid #30363d;
+            display: none;
+        }
+        .badge.active { display: inline-block; }
+        .status-text { color: var(--accent); font-weight: bold; margin-right: auto; }
+
+        /* TERMINAL */
         #term-output {
-            margin-top: 15px;
-            padding: 15px;
-            background: #010409;
-            border-radius: 6px;
-            min-height: 200px;
-            font-family: 'Consolas', monospace;
-            font-size: 13px;
-            white-space: pre-wrap;
-            color: #0f0;
-            max-height: 400px;
-            overflow-y: auto;
+            background: #010409; padding: 15px; border-radius: 6px; height: 400px;
+            overflow-y: auto; font-family: 'Consolas', monospace; font-size: 13px;
+            border: 1px solid #30363d; margin-top: 15px; white-space: pre-wrap;
         }
+        .msg-user { color: #fff; font-weight: bold; margin-top: 10px; }
+        .msg-result { color: #7ee787; }
+        .msg-error { color: #ff7b72; }
+        .msg-progress { color: #8b949e; font-style: italic; }
+
+        input[type="text"] {
+            width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d;
+            color: white; border-radius: 6px; font-family: monospace; font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus { outline: none; border-color: var(--accent); }
         
-        input[type="file"] { 
-            padding: 12px; 
-            background: #30363d; 
-            border: 2px solid #58a6ff; 
-            border-radius: 6px;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
+        /* Upload styling */
+        .upload-area { display: flex; gap: 10px; align-items: center; }
+        button {
+            padding: 10px 20px; background: #238636; border: none; color: white; border-radius: 6px;
+            cursor: pointer; font-weight: 600;
         }
-        input[type="file"]::file-selector-button {
-            background: #238636;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            color: white;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        
-        .emoji { font-size: 1.5rem; margin-right: 8px; }
-        .section-title {
-            color: #58a6ff;
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
+        button:hover { background: #2ea043; }
+        button:disabled { background: #30363d; cursor: not-allowed; }
     </style>
 </head>
 <body>
+
 <div class="container">
     <div class="card">
-        <h1><span class="emoji">🤖</span>RegisLite v4.5 <span class="status-badge status-ready" id="status">READY</span></h1>
-        <p class="subtitle">Polski AI Debugger - Upload → Analyze → Fix → Deploy</p>
+        <h1>🤖 RegisLite 5.0 <span style="font-size: 0.5em; color: #8b949e">| Sentient AI Edition</span></h1>
         
-        <div class="section-title"><span class="emoji">📦</span>1. Wybierz projekt</div>
-        <input type="file" id="zip" accept=".zip">
-        <button onclick="upload()">Upload ZIP</button>
-        <button onclick="debug()" id="btn" disabled>🚀 Start Debug</button>
-        
-        <div class="section-title" style="margin-top: 30px;"><span class="emoji">📊</span>2. Logi debugowania</div>
-        <div id="logs">Gotowy do pracy... Czekam na ZIP! 🥟</div>
+        <div class="upload-area">
+            <input type="file" id="zip" accept=".zip" style="width: auto">
+            <button onclick="upload()">Upload ZIP</button>
+            <button onclick="debug()" id="btn-debug" disabled>🔧 Auto-Fix</button>
+        </div>
     </div>
-    
+
     <div class="card">
-        <div class="terminal-header"><span class="emoji">💻</span>Terminal Interaktywny</div>
-        <p style="color: #8b949e; margin-bottom: 15px;">
-            Komendy: <code>ai:prompt</code>, <code>py:code</code>, <code>sh:command</code>, <code>file:action path</code>
-        </p>
-        <input type="text" id="cmd" placeholder="Wpisz komendę... np: ai:napisz funkcję sortującą">
-        <button onclick="sendCmd()">Wyślij</button>
-        <div id="term-output"># Terminal gotowy...\n# Wpisz komendę powyżej i kliknij Wyślij</div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <h3>💬 Terminal Inteligentny</h3>
+            <div style="font-size: 0.8rem; color: #8b949e">Wpisz cokolwiek - AI zrozumie intencję.</div>
+        </div>
+        
+        <input type="text" id="cmd" placeholder="Np: 'pokaż pliki', 'zrób migrację bazy', 'policz silnię z 5'..." autocomplete="off">
+        
+        <div class="progress-container" id="p-bar"><div class="progress-bar"></div></div>
+        
+        <div class="meta-bar">
+            <span id="status-text" class="status-text">Ready</span>
+            <span id="badge-model" class="badge">Model: GPT-4o</span>
+            <span id="badge-time" class="badge">Time: 0.00s</span>
+        </div>
+
+        <div id="term-output"># System gotowy. Wgraj plik lub pisz komendy.</div>
     </div>
 </div>
 
@@ -177,147 +109,99 @@
 let sid = null;
 let ws = null;
 
-function updateStatus(text, type) {
-    const badge = document.getElementById('status');
-    badge.textContent = text;
-    badge.className = 'status-badge status-' + type;
+function log(text, type='result') {
+    const out = document.getElementById('term-output');
+    const div = document.createElement('div');
+    div.className = 'msg-' + type;
+    div.textContent = text;
+    out.appendChild(div);
+    out.scrollTop = out.scrollHeight;
+}
+
+function setStatus(text, loading=false) {
+    document.getElementById('status-text').textContent = text;
+    document.getElementById('p-bar').style.display = loading ? 'block' : 'none';
+}
+
+function setMeta(model, time) {
+    const bm = document.getElementById('badge-model');
+    const bt = document.getElementById('badge-time');
+    
+    if (model && model !== '-') {
+        bm.textContent = `Model: ${model}`;
+        bm.className = 'badge active';
+    }
+    if (time) {
+        bt.textContent = `Latency: ${time}`;
+        bt.className = 'badge active';
+    }
 }
 
 async function upload() {
     const file = document.getElementById('zip').files[0];
-    if (!file) {
-        alert("Wybierz ZIP!");
-        return;
-    }
+    if (!file) return alert("Wybierz plik!");
     
-    updateStatus('UPLOADING...', 'working');
-    log(`📤 Wysyłam: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
-    
-    const form = new FormData();
-    form.append("file", file);
+    setStatus("Wysyłanie...", true);
+    const form = new FormData(); form.append("file", file);
     
     try {
         const res = await fetch("/upload", { method: "POST", body: form });
-        
-        if (!res.ok) {
-            const error = await res.json();
-            log(`❌ BŁĄD: ${error.detail}`);
-            updateStatus('ERROR', 'error');
-            return;
-        }
-        
         const data = await res.json();
+        if(!res.ok) throw new Error(data.detail);
+        
         sid = data.session_id;
-        log(`✅ Session: ${sid}\n${data.message}`);
-        document.getElementById('btn').disabled = false;
-        updateStatus('READY TO DEBUG', 'ready');
-        initWebSocket();
-    } catch (err) {
-        log(`❌ BŁĄD POŁĄCZENIA: ${err.message}`);
-        updateStatus('ERROR', 'error');
+        log(`✅ Sesja: ${sid}`, 'result');
+        document.getElementById('btn-debug').disabled = false;
+        initWS();
+        setStatus("Połączono. Czekam na rozkazy.");
+    } catch(e) {
+        log(`❌ Błąd: ${e.message}`, 'error');
+        setStatus("Błąd uploadu");
     }
 }
 
 async function debug() {
-    if (!sid) {
-        alert("Najpierw wgraj ZIP!");
-        return;
-    }
-    
-    updateStatus('DEBUGGING...', 'working');
-    log(`\n🔍 Rozpoczynam debugowanie sesji ${sid}...\n`);
-    document.getElementById('btn').disabled = true;
-    
-    try {
-        const res = await fetch(`/debug/${sid}`, { method: "POST" });
-        const data = await res.json();
-        
-        if (data.logs) {
-            log(Array.isArray(data.logs) ? data.logs.join('\n') : data.logs);
-        } else {
-            log(JSON.stringify(data, null, 2));
+    log("🚀 Uruchamiam auto-naprawę...", 'user');
+    fetch(`/debug/${sid}`, { method: "POST" })
+        .then(r => r.json())
+        .then(d => log(JSON.stringify(d, null, 2)))
+        .catch(e => log(e.message, 'error'));
+}
+
+function initWS() {
+    ws = new WebSocket(`ws://${location.host}/ws/${sid}`);
+    ws.onmessage = (e) => {
+        try {
+            const msg = JSON.parse(e.data);
+            
+            if (msg.type === 'progress') {
+                setStatus(msg.content, true);
+                log(`> ${msg.content}`, 'progress');
+            } else if (msg.type === 'result') {
+                setStatus("Gotowe.");
+                log(msg.content, 'result');
+                setMeta(msg.meta.model, msg.meta.duration);
+            } else if (msg.type === 'error') {
+                setStatus("Błąd!");
+                log(msg.content, 'error');
+            }
+        } catch {
+            log(e.data, 'result'); // Fallback dla starego formatu
         }
-        
-        updateStatus('DEBUG COMPLETE', 'ready');
-        document.getElementById('btn').disabled = false;
-    } catch (err) {
-        log(`❌ BŁĄD DEBUGOWANIA: ${err.message}`);
-        updateStatus('ERROR', 'error');
-        document.getElementById('btn').disabled = false;
-    }
-}
-
-function log(text) {
-    const logs = document.getElementById('logs');
-    const timestamp = new Date().toLocaleTimeString('pl-PL');
-    logs.textContent += `[${timestamp}] ${text}\n`;
-    logs.scrollTop = logs.scrollHeight;
-}
-
-function initWebSocket() {
-    // FIX: Używaj prawidłowego protokołu
-    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${location.host}/ws/${sid}`;
-    
-    log(`🔌 Łączę WebSocket: ${wsUrl}`);
-    
-    ws = new WebSocket(wsUrl);
-    
-    ws.onopen = () => {
-        log("✅ WebSocket połączony!");
-        termLog("# WebSocket connected! Ready for commands.");
     };
-    
-    ws.onmessage = e => {
-        termLog(e.data);
-    };
-    
-    ws.onerror = (err) => {
-        log(`❌ WebSocket error: ${err}`);
-        termLog("# ERROR: WebSocket connection failed!");
-    };
-    
-    ws.onclose = () => {
-        log("🔌 WebSocket zamknięty");
-        termLog("# WebSocket disconnected.");
-    };
+    ws.onclose = () => setStatus("Rozłączono", false);
 }
 
-function termLog(text) {
-    document.getElementById('term-output').textContent += '\n' + text;
-    document.getElementById('term-output').scrollTop = 
-        document.getElementById('term-output').scrollHeight;
-}
-
-function sendCmd() {
-    const cmd = document.getElementById('cmd').value.trim();
-    if (!cmd) return;
-    
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-        termLog("# ERROR: WebSocket not connected!");
-        return;
-    }
-    
-    termLog(`\n> ${cmd}`);
-    ws.send(cmd);
-    document.getElementById('cmd').value = "";
-}
-
-// Enter w terminalu
 document.getElementById('cmd').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendCmd();
-});
-
-// Sprawdź health przy załadowaniu
-window.addEventListener('load', async () => {
-    try {
-        const res = await fetch('/health');
-        const health = await res.json();
-        log(`🏥 Health check: ${health.status}`);
-        log(`   OpenAI: ${health.openai_configured ? '✅' : '❌'}`);
-        log(`   Workspace: ${health.workspace_exists ? '✅' : '❌'}`);
-    } catch (err) {
-        log(`⚠️  Health check failed: ${err.message}`);
+    if (e.key === 'Enter') {
+        const val = e.target.value;
+        if (!val) return;
+        if (!ws) return alert("Najpierw wgraj projekt!");
+        
+        log(`user: ${val}`, 'user');
+        ws.send(val);
+        e.target.value = '';
+        setStatus("Myślę...", true);
     }
 });
 </script>

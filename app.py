@@ -1,4 +1,3 @@
-# app.py - FIXED VERSION
 import os
 import shutil
 import uuid
@@ -15,7 +14,7 @@ load_dotenv()
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-MAX_ZIP_SIZE = 300 * 1024 * 1024  # 300MB
+MAX_ZIP_SIZE = 300 * 1024 * 1024  # 300MB po poprawce
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -24,12 +23,11 @@ async def root():
 
 @app.get("/health")
 async def health():
-    """Healthcheck endpoint - sprawdza stan aplikacji"""
     return {
         "status": "ok",
         "openai_configured": bool(os.getenv("OPENAI_API_KEY")),
         "workspace_exists": os.path.exists("workspace"),
-        "version": "4.5-fixed"
+        "version": "5.0-inteligent"
     }
 
 @app.post("/upload")
@@ -37,10 +35,9 @@ async def upload_zip(file: UploadFile = File(...)):
     if not file.filename.endswith(".zip"):
         raise HTTPException(400, detail="Tylko pliki .zip!")
     
-    # Walidacja rozmiaru
     content = await file.read()
     if len(content) > MAX_ZIP_SIZE:
-        raise HTTPException(413, detail="ZIP za duży! Maksymalny rozmiar: 50MB")
+        raise HTTPException(413, detail="ZIP za duży!")
     
     session_id = str(uuid.uuid4())[:8]
     workspace = f"workspace/{session_id}"
@@ -53,16 +50,15 @@ async def upload_zip(file: UploadFile = File(...)):
     try:
         shutil.unpack_archive(zip_path, f"{workspace}/project")
     except Exception as e:
-        raise HTTPException(400, detail=f"Błąd rozpakowywania ZIP: {str(e)}")
+        raise HTTPException(400, detail=f"Błąd rozpakowywania: {str(e)}")
     
-    return {"session_id": session_id, "message": "ZIP wgrany – kliknij Start Debug!"}
+    return {"session_id": session_id, "message": "Gotowe do akcji!"}
 
 @app.post("/debug/{session_id}")
 async def debug(session_id: str):
     workspace = f"workspace/{session_id}"
     if not os.path.exists(workspace):
-        raise HTTPException(404, detail="Session nie istnieje!")
-    
+        raise HTTPException(404, detail="Brak sesji!")
     try:
         result = await start_debug_loop(session_id)
         return JSONResponse(content=result)
@@ -75,7 +71,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
     try:
         while True:
             data = await websocket.receive_text()
-            result = await handle_command(data, session_id)
-            await websocket.send_text(result)
+            async for msg in handle_command(data, session_id):
+                await websocket.send_text(msg)
     except Exception as e:
-        await websocket.close(code=1011, reason=str(e))
+        print(f"WS Error: {e}")

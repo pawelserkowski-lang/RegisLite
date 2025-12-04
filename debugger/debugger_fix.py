@@ -1,45 +1,51 @@
 import traceback
+import sys
+import platform
+import os
 from typing import Dict, List
-
 from ai.chatgpt_client import ask
 
+# Wykrywanie srodowiska
+PYTHON_VER = f'{sys.version_info.major}.{sys.version_info.minor}'
+OS_NAME = f'{platform.system()} {platform.release()}'
+PATH_SEP = os.sep
+
+# Instrukcje Promptu (uzywamy potrojnych cudzyslowow w zmiennej)
 PATCH_INSTRUCTIONS = """
-Jesteś asystentem AI naprawiającym kod.
-Zwróć poprawki TYLKO w następującym formacie (bez dodatkowego komentarza, bez wyjaśnień):
-FILE: <ścieżka_pliku_od_workspace/project_w_dół_lub_pełna_ścieżka>
+Jesteś Starszym Inżynierem (Senior Python Dev).
+
+[[ TWOJE ŚRODOWISKO ]]
+- System: {OS_NAME}
+- Python: {PYTHON_VER}
+- Separator: '{PATH_SEP}'
+- Dostęp: PEŁNY
+
+[[ ZADANIE ]]
+Napraw błędy lub zrób audyt. Zwróć kod w blokach:
+
+FILE: sciezka{PATH_SEP}plik.py
 ```python
-<pełna, poprawiona treść pliku>
+<kod>
 ```
 END_FILE
 
-Zasady:
-- Nie dodawaj komentarzy poza powyższym formatem.
-- Jeśli plik nie istnieje, NIE twórz go — odpowiadaj tylko dla istniejących ścieżek.
-- Upewnij się, że ścieżki są zgodne z aktualną strukturą projektu.
-- Zwracaj pełną zawartość każdego zmienianego pliku.
-
-Plan: najpierw wypisz krótki plan zmian w 1-3 punktach, potem przedstaw patch zgodnie z formatem.
+Jeśli OK: NO_CHANGES_NEEDED
 """
-
 
 def _format_files(files: List[Dict[str, str]]) -> str:
     formatted = []
-    for f in files:
-        formatted.append(f"FILE: {f['path']}")
-        formatted.append("```")
-        formatted.append(f.get("content", ""))
-        formatted.append("```")
-    return "\n".join(formatted)
-
+    for f in files[:20]:
+        path = f['path']
+        content = f.get('content', '')
+        if len(content) > 30000: content = '<ZA DUŻY>'
+        formatted.append(f'=== PLIK: {path} ===\n{content}\n')
+    return '\n'.join(formatted)
 
 async def generate_patches(errors: str, files: List[Dict[str, str]]) -> str:
-    """
-    Buduje prompt dla modelu na podstawie wykrytych błędów i zawartości plików.
-    Zwraca tekst patchy wygenerowany przez model lub opis błędu.
-    """
-    prompt = f"{PATCH_INSTRUCTIONS}\n\nBłędy: {errors}\n\nPliki:\n{_format_files(files)}"
-
+    files_str = _format_files(files)
+    header = f'SYSTEM: {OS_NAME} | CWD: {os.getcwd()}'
+    prompt = f'{PATCH_INSTRUCTIONS}\n[{header}]\nZADANIE:\n{errors}\nPLIKI:\n{files_str}'
     try:
         return await ask(prompt)
-    except Exception:
-        return f"LLM error: {traceback.format_exc()}"
+    except Exception as e:
+        return f'LLM error: {traceback.format_exc()}'

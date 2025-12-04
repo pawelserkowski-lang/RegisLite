@@ -3,10 +3,20 @@
 Autonomiczny system naprawy kodu i debugowania wspierany przez agenta AI (Gemini/OpenAI).
 Zaprojektowany jako rozszerzenie do Gemini CLI, ale działający również jako samodzielny serwer WebSocket.
 
+## 📚 Dokumentacja Techniczna
+
+Pełna dokumentacja techniczna znajduje się w pliku [docs/TECHNICAL_DOCUMENTATION.md](docs/TECHNICAL_DOCUMENTATION.md).
+
+Obejmuje ona:
+*   Szczegółowy opis architektury systemu.
+*   Metodykę Agentową (Skeleton-of-Thought + Multi-Agent Debate).
+*   Kompletny przewodnik konfiguracji.
+*   API Reference (HTTP & WebSocket).
+
 ## 🚀 Szybki Start
 
 ### Wymagania
-* Python 3.12+
+* Python 3.10+
 * Klucz API OpenAI (`OPENAI_API_KEY`)
 
 ### Instalacja i Uruchomienie

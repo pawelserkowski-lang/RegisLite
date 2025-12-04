@@ -7,7 +7,6 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def ask_gpt(prompt: str, model: str = "gpt-4o-mini"):
     if not os.getenv("OPENAI_API_KEY"):
         return "[ERROR] Brak klucza OpenAI – używam fake diffa"
-    
     try:
         response = client.chat.completions.create(
             model=model,

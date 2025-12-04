@@ -2,7 +2,8 @@
 <html lang="pl">
 <head>
     <meta charset="utf-8">
-    <title>RegisLite 4.0 – Polski AI Debugger</title>
+    <title>RegisLite 4.5 – Polski AI Debugger</title>
+    <script src="https://unpkg.com/simple-peer@9.11.1/simplepeer.min.js"></script>
     <style>
         body { font-family: system-ui; background: #0d1117; color: #c9d1d9; margin: 40px; }
         .card { background: #161b22; padding: 40px; border-radius: 16px; max-width: 900px; margin: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
@@ -11,45 +12,67 @@
         button:hover { background: #2ea043; }
         button:disabled { background: #555; cursor: not-allowed; }
         #logs { background: #010409; padding: 20px; border-radius: 8px; white-space: pre-wrap; margin-top: 20px; min-height: 200px; }
+        #terminal { background: #0d1117; padding: 15px; border: 1px solid #58a6ff; border-radius: 8px; margin-top: 20px; }
+        #cmd { width: 80%; padding: 10px; background: #30363d; border: 1px solid #58a6ff; color: white; }
         input[type="file"] { padding: 10px; background: #30363d; border: 1px solid #58a6ff; border-radius: 6px; }
     </style>
 </head>
 <body>
 <div class="card">
-    <h1>RegisLite v4.0</h1>
-    <p>Wrzuć ZIP z kodem – naprawię printy i inne polskie klasyki</p>
+    <h1>RegisLite v4.5</h1>
+    <p>Upload ZIP → Debug → Realtime terminal (ai:/py:/sh:/file:)</p>
     
     <input type="file" id="zip" accept=".zip">
     <button onclick="upload()">Upload ZIP</button>
     <button onclick="debug()" id="btn" disabled>Start Debug</button>
     
     <div id="logs">Gotowy do pracy...</div>
+    
+    <div id="terminal">
+        <input type="text" id="cmd" placeholder="ai:prompt, py:print(42), sh:dir, file:read test.py">
+        <button onclick="sendCmd()">Wyślij</button>
+        <div id="term-output"></div>
+    </div>
 </div>
 
 <script>
 let sid = null;
+let ws = null;
+
 async function upload() {
     const file = document.getElementById('zip').files[0];
     if (!file) return alert("Wybierz ZIP!");
-    
     const form = new FormData();
     form.append("file", file);
-    
     const res = await fetch("/upload", { method: "POST", body: form });
     const data = await res.json();
     sid = data.session_id;
     log(`Session: ${sid}\n${data.message}`);
     document.getElementById('btn').disabled = false;
+    initWebSocket();
 }
 
 async function debug() {
-    const res = await fetch(`/debug/${sid}`, { method: "POST" });
-    const data = await res.json();
-    log(data.logs);
+    fetch(`/debug/${sid}`, { method: "POST" })
+        .then(r => r.json())
+        .then(d => log(d.logs));
 }
 
 function log(text) {
     document.getElementById('logs').textContent += "\n" + text + "\n";
+}
+
+function initWebSocket() {
+    ws = new WebSocket(`wss://${location.host}/ws/${sid}`);
+    ws.onmessage = e => {
+        document.getElementById('term-output').textContent += e.data + '\n';
+    };
+}
+
+function sendCmd() {
+    const cmd = document.getElementById('cmd').value;
+    if (ws) ws.send(cmd);
+    document.getElementById('cmd').value = "";
 }
 </script>
 </body>

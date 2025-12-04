@@ -1,0 +1,22 @@
+{
+  "id": "jules-regislite",
+  "name": "Jules (RegisLite)",
+  "version": "5.0.0",
+  "description": "System autonomicznej naprawy kodu z interfejsem WebSocket i Agentem AI.",
+  "main": "run.py",
+  "publisher": "gemini-cli-extensions",
+  "engines": {
+    "gemini": "^1.0.0"
+  },
+  "activationEvents": [
+    "onCommand:jules.start"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "jules.start",
+        "title": "Start Jules Agent"
+      }
+    ]
+  }
+}

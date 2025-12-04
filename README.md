@@ -1,46 +1,77 @@
-Nowa Struktura Projektu RegisLite
+# Jules (RegisLite)
 
-Projekt został zrefaktoryzowany do architektury modułowej.
+Autonomiczny system naprawy kodu i debugowania wspierany przez agenta AI (Gemini/OpenAI).
+Zaprojektowany jako rozszerzenie do Gemini CLI, ale działający również jako samodzielny serwer WebSocket.
 
-Struktura katalogów
+## 🚀 Szybki Start
 
-run.py - Skrypt startowy. Używaj go zamiast uvicorn app:app ....
+### Wymagania
+* Python 3.12+
+* Klucz API OpenAI (`OPENAI_API_KEY`)
 
-src/ - Główny kod źródłowy aplikacji.
+### Instalacja i Uruchomienie
 
-main.py - Punkt wejścia aplikacji (dawne app.py).
+1.  **Sklonuj repozytorium i wejdź do katalogu:**
+    ```bash
+    git clone https://github.com/gemini-cli-extensions/jules
+    cd jules
+    ```
 
-ai/, rtc/, debugger/, services/ - Moduły z logiką.
+2.  **Stwórz wirtualne środowisko i zainstaluj zależności:**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # Windows: venv\Scripts\activate
+    pip install -r requirements.txt
+    ```
 
-config/ - Konfiguracja i zmienne środowiskowe.
+3.  **Skonfiguruj zmienne środowiskowe:**
+    Stwórz plik `.env` (na bazie `.env.example`):
+    ```ini
+    OPENAI_API_KEY=sk-twoj-klucz
+    WORKSPACE_DIR=workspace
+    ```
 
-static/ - Pliki frontendowe (dashboard.html).
+4.  **Uruchom serwer:**
+    ```bash
+    python run.py
+    ```
+    Serwer wystartuje na `http://localhost:8000`.
 
-scripts/ - Narzędzia pomocnicze, skrypty naprawcze (fix_*.py), skrypty PowerShell.
+## 🛠️ Workflow: Review and Merge
 
-docs/ - Logi błędów, notatki i stara dokumentacja.
+Jules używa modelu "Plan -> Weryfikacja -> Wykonanie".
 
-Jak uruchomić?
+1.  **Upload Projektu**:
+    Wyślij plik `.zip` z kodem na endpoint `/upload` lub użyj dashboardu.
+2.  **Start Sesji**:
+    Połącz się przez WebSocket (`ws://localhost:8000/ws/{session_id}`).
+3.  **Interakcja**:
+    *   Opisz problem (np. "Napraw błąd w pliku X").
+    *   Jules przedstawi **Plan Działania**.
+4.  **Zatwierdzenie i Wykonanie**:
+    *   Jules samodzielnie weryfikuje pliki.
+    *   Wprowadza zmiany.
+    *   Uruchamia testy (jeśli poprosisz).
+5.  **Review**:
+    *   Sprawdź zmienione pliki w katalogu `workspace/{session_id}`.
 
-Zainstaluj zależności (ponownie, bo usunęliśmy stary venv):
+## 🏗️ Architektura
 
-python -m venv venv
-# Windows:
-.\venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
+Projekt został zrefaktoryzowany do modułowej struktury (Separation of Concerns):
 
-pip install -r requirements.txt
+*   `src/ai/`: Logika AI, klient OpenAI, Prompty.
+*   `src/rtc/`: Obsługa WebSocket, zarządzanie sesją (`SessionManager`), wykonywanie narzędzi (`ToolExecutor`).
+*   `src/config/`: Konfiguracja i definicje błędów (`errors.py`).
+*   `tests/`: Testy jednostkowe i integracyjne.
 
+### Główne komponenty:
+*   **Signaling**: Router WebSocket.
+*   **Intent Classifier**: Szybki router (Regex + LLM Fallback) decydujący o użyciu narzędzia (`sh`, `py`, `file`, `ai`).
+*   **Tool Executor**: Bezpieczne wykonywanie komend i operacji na plikach.
 
-Uruchom serwer:
+## 🧪 Testowanie
 
-python run.py
-
-
-Aplikacja wstanie na porcie 8000.
-
-Uwaga dotycząca importów
-
-Jeśli będziesz tworzył nowe pliki w src/, używaj importów absolutnych, np.:
-from src.services import file_tool zamiast import services.file_tool.
+Uruchom testy za pomocą `pytest`:
+```bash
+python -m pytest tests/
+```

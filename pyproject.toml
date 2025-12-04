@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "regislite"
+version = "5.0.0"
+description = "Autonomiczny agent naprawczy AI dla projektów Python"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Paweł Serkowski", email = "pawel@example.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "httpx",
+    "python-dotenv",
+    "python-multipart",
+    "websockets"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/pawelserkowski-lang/regislite"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

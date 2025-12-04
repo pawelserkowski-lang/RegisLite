@@ -1,49 +1,104 @@
-# UWAGA: Ten plik to dawne app.py po refaktoryzacji importów.
-# Zakładam typową strukturę FastAPI/Starlette na podstawie nazw plików.
-
 import os
 import sys
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 
-# -- ZMIANA IMPORTÓW NA RELATYWNE LUB Z PAKIETU SRC --
-# Wcześniej było: from config.env_config import ...
-# Teraz, będąc wewnątrz pakietu src, używamy importów absolutnych od roota lub relatywnych.
-try:
-    from src.config.env_config import Config
-    from src.ai.chatgpt_client import ChatGPTClient
-    from src.rtc.signaling import signaling_router  # Przykład routera
-    from src.debugger.debugger_analyzer import Debugger
-except ImportError:
-    # Fallback dla IDE, które nie ogarniają path
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from config.env_config import Config
-    # ... itd
+# Importy z wnętrza pakietu
+from src.config.env_config import get_config
+from src.debugger.debugger_loop import start_debug_loop
+from src.rtc.signaling import handle_command
+from src.api.endpoints import router as api_router # Zakładam, że wydzielimy to w przyszłości, ale na razie zostawmy tu logikę dla uproszczenia
+import shutil
+import uuid
+from fastapi import File, UploadFile, HTTPException, WebSocket
 
-app = FastAPI(title="RegisLite", version="2.0.0 Modular")
+# Inicjalizacja Configu
+config = get_config()
 
-# --- KONFIGURACJA ---
-# Obsługa plików statycznych
+app = FastAPI(
+    title="RegisLite AI",
+    version="5.0.0 (Sentient Edition)",
+    description="System autonomicznej naprawy kodu z interfejsem WebSocket"
+)
+
+# CORS - Ważne dla developmentu
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Obsługa statyków
 static_dir = os.path.join(os.path.dirname(__file__), "static")
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-# --- ROUTING ---
-# Jeśli masz routery w podmodułach, tutaj je podłączasz
-# app.include_router(signaling_router, prefix="/rtc")
+os.makedirs(static_dir, exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 @app.get("/")
 async def read_root():
-    # Serwowanie dashboardu
     dashboard_path = os.path.join(static_dir, "dashboard.html")
     if os.path.exists(dashboard_path):
         return FileResponse(dashboard_path)
-    return {"message": "RegisLite API is running. Dashboard not found."}
+    return {"message": "RegisLite API is running. Dashboard not found in /static."}
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "module": "modular_structure"}
+    return {
+        "status": "operational",
+        "mode": "async",
+        "model": config.OPENAI_MODEL,
+        "workspace_ready": os.path.exists(config.WORKSPACE_DIR)
+    }
 
-# Tutaj byłaby reszta Twojej logiki z oryginalnego app.py
-# Pamiętaj, żeby przenieść logikę biznesową do service'ów w src/services/
+# --- ENDPOINTY (Przeniesione z dawnego app.py i dostosowane) ---
+
+@app.post("/upload")
+async def upload_zip(file: UploadFile = File(...)):
+    if not file.filename.endswith(".zip"):
+        raise HTTPException(400, detail="Tylko pliki .zip!")
+    
+    # Generuj ID sesji
+    session_id = str(uuid.uuid4())[:8]
+    workspace = config.WORKSPACE_DIR / session_id
+    project_dir = workspace / "project"
+    
+    try:
+        os.makedirs(project_dir, exist_ok=True)
+        zip_path = workspace / "upload.zip"
+        
+        content = await file.read()
+        with open(zip_path, "wb") as f:
+            f.write(content)
+            
+        shutil.unpack_archive(zip_path, project_dir)
+        return {"session_id": session_id, "message": "Projekt załadowany. Gotowy do debugowania."}
+        
+    except Exception as e:
+        # Sprzątanie po błędzie
+        if os.path.exists(workspace):
+            shutil.rmtree(workspace)
+        raise HTTPException(500, detail=f"Upload failed: {str(e)}")
+
+@app.post("/debug/{session_id}")
+async def debug_endpoint(session_id: str):
+    # Asynchroniczne uruchomienie pętli debuggera
+    try:
+        result = await start_debug_loop(session_id)
+        return JSONResponse(content=result)
+    except Exception as e:
+        raise HTTPException(500, detail=str(e))
+
+@app.websocket("/ws/{session_id}")
+async def websocket_endpoint(websocket: WebSocket, session_id: str):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # handle_command jest generatorem asynchronicznym (yield)
+            async for msg in handle_command(data, session_id):
+                await websocket.send_text(msg)
+    except Exception as e:
+        print(f"WS Disconnected: {e}")

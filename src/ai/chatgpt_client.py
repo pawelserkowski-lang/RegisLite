@@ -1,75 +1,100 @@
 import os
 import time
-import json
-import requests
+import logging
+import httpx
+import asyncio
+from typing import Optional, Tuple, Dict, Any
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+# Konfiguracja loggera - żebyśmy widzieli co się dzieje, a nie zgadywali z fusów
+logger = logging.getLogger(__name__)
 
-def _call_gpt(messages, model=None, json_mode=False):
-    """Pomocnicza funkcja do wołania API"""
-    if not OPENAI_API_KEY:
-        raise Exception("Brak klucza API!")
+# Pobieranie konfiguracji wewnątrz funkcji/klasy (unikanie zmiennych globalnych przy imporcie)
+def _get_config():
+    from src.config.env_config import get_config
+    return get_config()
 
+async def _call_gpt_async(messages: list, model: Optional[str] = None, json_mode: bool = False) -> Tuple[str, float, str]:
+    """
+    Asynchroniczne wywołanie OpenAI API. 
+    Nie blokuje Event Loopa, dzięki czemu serwer może obsługiwać inne requesty czekając na AI.
+    """
+    config = _get_config()
+    api_key = config.OPENAI_API_KEY
+    
+    if not api_key:
+        raise ValueError("CRITICAL: Brak klucza OPENAI_API_KEY! Sprawdź zmienne środowiskowe.")
+
+    used_model = model or config.OPENAI_MODEL
     url = "https://api.openai.com/v1/chat/completions"
+    
     headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
     
-    data = {
-        "model": model or OPENAI_MODEL,
-        "messages": messages
+    payload = {
+        "model": used_model,
+        "messages": messages,
+        "temperature": 0.2
     }
     
     if json_mode:
-        data["response_format"] = {"type": "json_object"}
+        payload["response_format"] = {"type": "json_object"}
 
     start_time = time.time()
-    resp = requests.post(url, headers=headers, json=data, timeout=60)
-    duration = time.time() - start_time
     
-    if resp.status_code != 200:
-        raise Exception(f"OpenAI Error {resp.status_code}: {resp.text}")
+    # Używamy httpx.AsyncClient - to jest ten "Turbo Diesel" zamiast starego silnika parowego requests
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        try:
+            response = await client.post(url, headers=headers, json=payload)
+            
+            if response.status_code != 200:
+                logger.error(f"OpenAI Error {response.status_code}: {response.text}")
+                raise Exception(f"OpenAI API Error: {response.status_code}")
+                
+            data = response.json()
+            content = data["choices"][0]["message"]["content"]
+            duration = time.time() - start_time
+            
+            return content, duration, used_model
+            
+        except httpx.ReadTimeout:
+            logger.warning("OpenAI timeout - model myśli wolniej niż polityk przy trudnym pytaniu.")
+            return "Error: Timeout", 120.0, used_model
+        except Exception as e:
+            logger.error(f"Network error: {str(e)}")
+            raise
 
-    content = resp.json()["choices"][0]["message"]["content"]
-    return content, duration, (model or OPENAI_MODEL)
-
-async def classify_intent(user_input: str):
-    """
-    Analizuje co użytkownik miał na myśli.
-    Zwraca JSON: { "tool": "sh"|"py"|"ai"|"file", "args": "..." }
-    """
+async def classify_intent(user_input: str) -> Tuple[Dict[str, Any], float, str]:
+    """Router intencji - decyduje jakiego narzędzia użyć."""
     system_prompt = """
     Jesteś routerem komend dla systemu RegisLite.
-    Twoim zadaniem jest klasyfikacja intencji użytkownika na jedną z kategorii:
+    Klasyfikacja intencji użytkownika:
     - "sh": komendy systemowe (git, ls, dir, mkdir, instalacja pakietów)
     - "py": krótki kod python do obliczeń lub testów
-    - "file": operacje na plikach (czytanie, zapisywanie)
-    - "ai": zwykła rozmowa, pytania o kod, prośby o wyjaśnienie
+    - "file": operacje na plikach (read, write, list)
+    - "ai": zwykła rozmowa, pytania o kod
     
-    Zwróć TYLKO JSON w formacie: {"tool": "...", "args": "..."}.
-    Przykład: "pokaż pliki" -> {"tool": "sh", "args": "dir"}
-    Przykład: "policz 2+2" -> {"tool": "py", "args": "print(2+2)"}
+    Zwróć TYLKO JSON: {"tool": "...", "args": "..."}
     """
     
     try:
-        content, duration, model = _call_gpt(
+        content, duration, model = await _call_gpt_async(
             [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_input}],
-            model="gpt-4o-mini", # Używamy szybkiego modelu do routingu
+            model="gpt-4o-mini", # Szybki model do routingu
             json_mode=True
         )
+        import json
         return json.loads(content), duration, model
     except Exception as e:
-        # Fallback do zwykłego AI
+        logger.error(f"Router error: {e}")
+        # Fallback
         return {"tool": "ai", "args": user_input}, 0.0, "error-fallback"
 
-async def ask_with_stats(prompt: str):
-    """Zwykłe zapytanie, ale zwraca też metadane"""
-    content, duration, model = _call_gpt([{"role": "user", "content": prompt}])
-    return content, duration, model
+async def ask_with_stats(prompt: str) -> Tuple[str, float, str]:
+    return await _call_gpt_async([{"role": "user", "content": prompt}])
 
-# Kompatybilność wsteczna dla starych modułów
+# Kompatybilność wsteczna
 async def ask(prompt: str) -> str:
-    c, _, _ = await ask_with_stats(prompt)
-    return c
+    content, _, _ = await ask_with_stats(prompt)
+    return content

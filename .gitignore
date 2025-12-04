@@ -34,3 +34,19 @@ build/
 *.so
 *.dylib
 workspace/
+
+# Python Artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments
+venv/
+env/
+.venv/
+
+# Logs
+*.log
+venv/
+__pycache__/

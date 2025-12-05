@@ -5,29 +5,30 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "regislite"
 version = "5.0.0"
-description = "Autonomiczny agent naprawczy AI dla projektów Python"
+description = "System autonomicznej naprawy kodu z interfejsem WebSocket"
+authors = [
+  { name="RegisLite Team", email="regis@example.com" },
+]
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [
-  { name = "Paweł Serkowski", email = "pawel@example.com" },
-]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
 dependencies = [
-    "fastapi",
-    "uvicorn",
-    "httpx",
-    "python-dotenv",
-    "python-multipart",
-    "websockets"
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+    "python-dotenv>=1.0.0",
+    "python-multipart>=0.0.6",
+    "httpx>=0.24.0",
+    "websockets>=11.0",
+    "requests",
 ]
 
-[project.urls]
-"Homepage" = "https://github.com/pawelserkowski-lang/regislite"
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-playwright>=0.4.0",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+python_files = ["test_*.py"]

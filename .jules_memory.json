@@ -1,0 +1,1 @@
+{ "history": [ { "error_signature": "asyncio_runner_conflict", "strategy_used": "nest_asyncio + explicit asyncio.run", "outcome": "FIXED", "timestamp": "2023-10-27T10:00:00Z" } ], "unresolved_issues": [] }

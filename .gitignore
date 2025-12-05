@@ -1,52 +1,19 @@
-# --- REGISLITE HEAVYWEIGHTS BLOCKER ---
-# Blokada dużych archiwów (Twój wróg nr 1)
-*.zip
-*.tar
-*.gz
-*.rar
-*.7z
-*.bak
-
-# Blokada modeli AI i dużych danych
-*.ckpt
-*.pt
-*.pth
-*.onnx
-*.safetensors
-*.bin
-*.h5
-
-# Blokada mediów i baz danych
-*.mp4
-*.mov
-*.avi
-*.mkv
-*.sql
-*.sqlite
-*.db
-*.csv
-
-# Blokada folderów systemowych i buildów
-dist/
-build/
-*.exe
-*.dll
-*.so
-*.dylib
-workspace/
-
-# Python Artifacts
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Environments
+.env
+.env.local
 venv/
-env/
 .venv/
-
-# Logs
+workspace/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
 *.log
-venv/
-__pycache__/
+.DS_Store
+.vscode/
+.idea/
+test-results/

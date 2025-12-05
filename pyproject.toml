@@ -3,31 +3,34 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "regislite"
-version = "5.0.0"
-description = "Autonomiczny agent naprawczy AI dla projektów Python"
+name = "regislite-core"
+version = "5.1.2"
+description = "Autonomiczny System Naprawczy (God Mode Refactor)"
 readme = "README.md"
-requires-python = ">=3.10"
-authors = [
-  { name = "Paweł Serkowski", email = "pawel@example.com" },
-]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
+requires-python = ">=3.11"
 dependencies = [
-    "fastapi",
-    "uvicorn",
-    "httpx",
-    "python-dotenv",
-    "python-multipart",
-    "websockets"
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.1.0",
+    "httpx>=0.26.0",
+    "python-dotenv>=1.0.1",
+    "tenacity>=8.2.0",
+    "jinja2>=3.1.3",
+    "aiofiles>=23.2.1",
+    "nest_asyncio>=1.6.0"
 ]
 
-[project.urls]
-"Homepage" = "https://github.com/pawelserkowski-lang/regislite"
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "playwright>=1.41.0"
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore::DeprecationWarning"]

@@ -7,3 +7,4 @@ websockets>=11.0
 pytest>=7.0.0
 pytest-asyncio>=0.21.0
 requests
+pytest-playwright>=0.4.0

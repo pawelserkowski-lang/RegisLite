@@ -2,111 +2,202 @@
 <html lang="pl">
 <head>
     <meta charset="utf-8">
-    <title>RegisLite 6.0 - OmniTool</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <title>RegisLite 6.0 - OmniTool (CyberDeck)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark-reasonable.min.css"> <!-- Used a darker theme to fit -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cyber-black': '#000000',
+                        'cyber-green': '#00FF41',
+                        'cyber-dim': '#003B00',
+                        'cyber-alert': '#FF0000',
+                        'cyber-amber': '#FFB000',
+                    },
+                    fontFamily: {
+                        mono: ['"Courier New"', 'Courier', 'monospace'],
+                    },
+                    borderRadius: {
+                        DEFAULT: '0px',
+                        'none': '0px',
+                        'sm': '0px',
+                        'md': '0px',
+                        'lg': '0px',
+                        'xl': '0px',
+                        '2xl': '0px',
+                        'full': '0px',
+                    },
+                    cursor: {
+                        'block': 'block', // Custom cursor if needed, but text-cursor is standard
+                    }
+                }
+            }
+        }
+    </script>
     
     <style>
-        :root { --accent: #00f2ea; --bg: #0b0d12; --panel: #161b22; --text: #c9d1d9; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', monospace; background: var(--bg); color: var(--text); padding: 20px; }
-        
-        .container { max-width: 1200px; margin: 0 auto; display: grid; gap: 20px; }
-        .card { background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid #30363d; }
-        
-        h1 { font-size: 2rem; background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
-        
-        /* PROGRESS BAR - ANIMOWANY */
-        .progress-container {
-            height: 4px; background: #21262d; width: 100%; border-radius: 2px; overflow: hidden; margin-top: 15px; opacity: 0; transition: opacity 0.3s;
+        /* GLOBAL RESET & BASICS */
+        body {
+            background-color: #000000;
+            color: #00FF41;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: hidden;
         }
-        .progress-bar {
-            height: 100%; width: 0%; background: var(--accent);
-            box-shadow: 0 0 10px var(--accent);
-            transition: width 0.5s ease;
-        }
-        .pulsing { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        /* STATUS BADGES */
-        .meta-bar {
-            display: flex; gap: 10px; font-size: 0.8rem; color: #8b949e;
-            margin-top: 10px; align-items: center; min-height: 24px;
-        }
-        .badge {
-            background: #21262d; padding: 2px 8px; border-radius: 4px; border: 1px solid #30363d; display: none;
-        }
-        .badge.active { display: inline-block; }
-        .model-tag { color: #f2cc60; }
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #000000; border-left: 1px solid #003B00; }
+        ::-webkit-scrollbar-thumb { background: #003B00; border: 1px solid #00FF41; }
+        ::-webkit-scrollbar-thumb:hover { background: #00FF41; }
 
-        /* TERMINAL / CHAT */
-        #term-output {
-            background: #010409; padding: 20px; border-radius: 6px; height: 500px;
-            overflow-y: auto; font-family: 'Consolas', monospace; font-size: 14px;
-            border: 1px solid #30363d; margin-top: 15px;
+        /* SCANLINES OVERLAY */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* TEXT GLOW */
+        .text-glow {
+            text-shadow: 0 0 5px #00FF41, 0 0 10px #00FF41;
+        }
+
+        /* UTILS */
+        .cyber-border {
+            border: 1px solid #00FF41;
+        }
+        .cyber-border-dim {
+            border: 1px solid #003B00;
         }
         
-        /* Message styles */
-        .msg { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #21262d; }
-        .msg-user { color: #fff; font-weight: bold; border-left: 3px solid var(--accent); padding-left: 10px; }
-        .msg-result { color: #c9d1d9; }
-        .msg-error { color: #ff7b72; border-left: 3px solid #ff7b72; padding-left: 10px; }
-        .msg-progress { color: #8b949e; font-style: italic; font-size: 0.9em; }
-
-        /* Markdown Styles fix */
-        pre { background: #0d1117; padding: 10px; border-radius: 6px; overflow-x: auto; border: 1px solid #30363d; }
-        code { font-family: 'Consolas', monospace; }
-        p { margin-bottom: 8px; }
-
-        input[type="text"] {
-            width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d;
-            color: white; border-radius: 6px; font-family: monospace; font-size: 14px;
-            transition: border-color 0.2s;
+        /* INPUT CARET */
+        input, textarea {
+            caret-color: #00FF41;
+            caret-shape: block; /* Experimental */
         }
-        input[type="text"]:focus { outline: none; border-color: var(--accent); }
         
-        button {
-            padding: 10px 20px; background: #238636; border: none; color: white; border-radius: 6px;
-            cursor: pointer; font-weight: 600;
+        /* MARKDOWN OVERRIDES FOR CYBER THEME */
+        .prose pre {
+            background-color: #000000 !important;
+            border: 1px solid #003B00;
+            border-radius: 0 !important;
         }
-        button:hover { background: #2ea043; }
-        button:disabled { background: #30363d; cursor: not-allowed; }
+        .prose code {
+            font-family: 'Courier New', monospace !important;
+            color: #00FF41 !important;
+        }
+        .prose p, .prose li {
+            color: #00FF41;
+        }
+        .prose strong {
+            color: #00FF41;
+            text-shadow: 0 0 2px #00FF41;
+        }
+
+        /* HLJS Overrides */
+        .hljs {
+            background: #000000 !important;
+            color: #00FF41 !important;
+        }
     </style>
 </head>
-<body>
+<body class="antialiased min-h-screen relative p-4 selection:bg-cyber-green selection:text-cyber-black">
 
-<div class="container">
-    <div class="card">
-        <h1>🤖 RegisLite 6.0 <span style="font-size: 0.5em; color: #8b949e">| OmniTool</span></h1>
+<div class="scanlines"></div>
+
+<div class="max-w-6xl mx-auto space-y-6 relative z-10">
+
+    <!-- HEADER PANEL -->
+    <div class="cyber-border p-4 bg-cyber-black">
+        <h1 class="text-2xl uppercase tracking-widest text-glow font-bold mb-4">
+            🤖 RegisLite 6.0 <span class="text-xs text-cyber-dim align-middle">| OmniTool System</span>
+        </h1>
         
-        <div style="display:flex; gap:10px; align-items:center;">
-            <input type="file" id="zip" accept=".zip" style="width: auto">
-            <button onclick="upload()">Upload ZIP</button>
-            <button onclick="debug()" id="btn-debug" disabled>🔧 Auto-Fix</button>
+        <div class="flex flex-wrap gap-4 items-end">
+            <div class="flex-grow max-w-md">
+                <label class="block text-xs text-cyber-green mb-1 uppercase">Target File</label>
+                <input type="file" id="zip" accept=".zip"
+                       class="block w-full text-sm text-cyber-green
+                              file:mr-4 file:py-2 file:px-4
+                              file:border file:border-cyber-green
+                              file:text-cyber-green file:bg-black
+                              file:cursor-pointer hover:file:bg-cyber-green hover:file:text-black
+                              cursor-pointer border-b border-cyber-dim focus:border-cyber-green focus:outline-none bg-transparent p-2">
+            </div>
+
+            <button onclick="upload()"
+                    class="h-10 px-6 border border-cyber-green text-cyber-green uppercase text-sm tracking-wider
+                           hover:bg-cyber-green hover:text-black transition-none focus:outline-none active:translate-y-px">
+                Upload ZIP
+            </button>
+
+            <button onclick="debug()" id="btn-debug" disabled
+                    class="h-10 px-6 border border-cyber-dim text-cyber-dim uppercase text-sm tracking-wider
+                           cursor-not-allowed disabled:opacity-50">
+                🔧 Auto-Fix
+            </button>
         </div>
     </div>
 
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <h3>💬 Terminal & Czat (Memory Enabled)</h3>
-            <div style="font-size: 0.8rem; color: #8b949e">Obsługuje Markdown i kolorowanie składni</div>
-        </div>
-        
-        <input type="text" id="cmd" placeholder="Wpisz komendę lub zapytaj AI..." autocomplete="off">
-        
-        <div class="progress-container" id="p-container">
-            <div class="progress-bar pulsing" id="p-bar"></div>
-        </div>
-        
-        <div class="meta-bar">
-            <span id="status-text" style="color: var(--accent)">Ready</span>
-            <span id="badge-model" class="badge model-tag">Model: -</span>
-            <span id="badge-time" class="badge">Time: -</span>
+    <!-- MAIN TERMINAL PANEL -->
+    <div class="cyber-border bg-cyber-black flex flex-col h-[800px]">
+        <!-- Panel Header -->
+        <div class="bg-cyber-green text-black px-4 py-1 text-sm font-bold uppercase flex justify-between items-center">
+            <span>Terminal & Chat // Memory Enabled</span>
+            <span class="text-[10px]">Markdown Supported</span>
         </div>
 
-        <div id="term-output">
-            <div class="msg-progress">> System gotowy. Wgraj projekt, aby rozpocząć.</div>
+        <!-- Meta Bar -->
+        <div class="p-2 border-b border-cyber-dim flex gap-4 text-xs font-mono">
+            <div class="flex items-center gap-2">
+                <span class="text-cyber-dim">STATUS:</span>
+                <span id="status-text" class="text-cyber-green text-glow">READY</span>
+            </div>
+            <div id="badge-model-container" class="hidden">
+                 <span class="text-cyber-dim">MODEL:</span>
+                 <span id="badge-model" class="text-cyber-amber"></span>
+            </div>
+            <div id="badge-time-container" class="hidden">
+                 <span class="text-cyber-dim">LATENCY:</span>
+                 <span id="badge-time" class="text-cyber-green"></span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="p-container" class="px-4 py-2 opacity-0 transition-opacity duration-300">
+             <div class="w-full border border-cyber-dim h-4 p-0.5">
+                 <div id="p-bar" class="h-full bg-cyber-green w-0 transition-all duration-300 ease-out shadow-[0_0_10px_#00FF41]"></div>
+             </div>
+        </div>
+        
+        <!-- Output Area -->
+        <div id="term-output" class="flex-grow overflow-y-auto p-4 font-mono text-sm space-y-4">
+            <div class="text-cyber-dim italic">> System gotowy. Wgraj projekt, aby rozpocząć.</div>
+        </div>
+
+        <!-- Command Input -->
+        <div class="p-4 border-t border-cyber-green bg-black">
+            <div class="flex items-center gap-2">
+                <span class="text-cyber-green animate-pulse">></span>
+                <input type="text" id="cmd"
+                       placeholder="Wpisz komendę lub zapytaj AI..."
+                       autocomplete="off"
+                       class="w-full bg-transparent border-none focus:ring-0 text-cyber-green placeholder-cyber-dim font-mono focus:outline-none">
+            </div>
         </div>
     </div>
 </div>
@@ -128,27 +219,25 @@ marked.setOptions({
 function log(text, type='result') {
     const out = document.getElementById('term-output');
     const div = document.createElement('div');
-    div.className = 'msg';
     
+    // Add border-l or visual distinction based on type
     if (type === 'user') {
-        div.innerHTML = `<div class="msg-user">${text}</div>`;
+        div.className = 'border-l-2 border-cyber-green pl-2 text-white font-bold mb-2';
+        div.innerText = `> ${text}`;
     } else if (type === 'progress') {
-        div.innerHTML = `<div class="msg-progress">${text}</div>`;
+        div.className = 'text-cyber-dim italic text-xs mb-2';
+        div.innerText = `>> ${text}`;
     } else if (type === 'error') {
-        div.innerHTML = `<div class="msg-error">${text}</div>`;
+        div.className = 'border-l-2 border-cyber-alert pl-2 text-cyber-alert mb-2';
+        div.innerText = `[ERROR] ${text}`;
     } else {
-        // Render Markdown for results
-        div.className += ' msg-result';
+        // Result (Markdown)
+        div.className = 'prose max-w-none text-cyber-green mb-4 pb-4 border-b border-cyber-dim last:border-0';
         div.innerHTML = marked.parse(text);
     }
     
     out.appendChild(div);
     out.scrollTop = out.scrollHeight;
-    
-    // Highlight code blocks after render
-    div.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightElement(block);
-    });
 }
 
 function updateProgress(percent, text) {
@@ -159,25 +248,31 @@ function updateProgress(percent, text) {
     if (percent > 0) {
         cont.style.opacity = 1;
         bar.style.width = percent + '%';
-        stat.textContent = text;
+        stat.textContent = text.toUpperCase();
+        stat.classList.add('animate-pulse');
     } else {
         cont.style.opacity = 0;
         bar.style.width = '0%';
-        stat.textContent = "Ready";
+        if (text) stat.textContent = text.toUpperCase();
+        stat.classList.remove('animate-pulse');
     }
 }
 
 function setMeta(model, time) {
+    const bmCont = document.getElementById('badge-model-container');
     const bm = document.getElementById('badge-model');
+    const btCont = document.getElementById('badge-time-container');
     const bt = document.getElementById('badge-time');
     
     if (model && model !== '-') {
-        bm.textContent = `AI: ${model}`;
-        bm.className = 'badge active model-tag';
+        bm.textContent = model;
+        bmCont.classList.remove('hidden');
+        bmCont.classList.add('flex', 'items-center', 'gap-2');
     }
     if (time) {
-        bt.textContent = `Lat: ${time}`;
-        bt.className = 'badge active';
+        bt.textContent = time;
+        btCont.classList.remove('hidden');
+        btCont.classList.add('flex', 'items-center', 'gap-2');
     }
 }
 
@@ -194,8 +289,14 @@ async function upload() {
         if(!res.ok) throw new Error(data.detail);
         
         sid = data.session_id;
-        log(`✅ Sesja utworzona: ${sid}`, 'progress');
-        document.getElementById('btn-debug').disabled = false;
+        log(`Sesja utworzona: ${sid}`, 'progress');
+
+        // Enable Debug Button
+        const btn = document.getElementById('btn-debug');
+        btn.disabled = false;
+        btn.classList.remove('border-cyber-dim', 'text-cyber-dim', 'cursor-not-allowed');
+        btn.classList.add('border-cyber-green', 'text-cyber-green', 'hover:bg-cyber-green', 'hover:text-black');
+
         initWS();
         updateProgress(0, "Ready");
     } catch(e) {
@@ -207,7 +308,7 @@ async function upload() {
 async function debug() {
     if (!ws) return alert("Brak połączenia!");
     const cmd = "Przeprowadź pełną analizę i naprawę projektu.";
-    log("🚀 Uruchamiam Auto-Fixer...", 'user');
+    log("Uruchamiam Auto-Fixer...", 'user');
     ws.send(cmd);
     updateProgress(20, "Autonaprawa...");
 }
@@ -220,12 +321,10 @@ function initWS() {
             
             if (msg.type === 'progress') {
                 updateProgress(60, msg.content);
-                // Opcjonalnie: loguj progress też do czatu
-                // log(msg.content, 'progress');
             } else if (msg.type === 'result') {
                 updateProgress(0, "Ready");
                 log(msg.content, 'result');
-                setMeta(msg.meta.model, msg.meta.duration);
+                if (msg.meta) setMeta(msg.meta.model, msg.meta.duration);
             } else if (msg.type === 'error') {
                 updateProgress(0, "Error");
                 log(msg.content, 'error');
@@ -234,7 +333,10 @@ function initWS() {
             log(e.data, 'result');
         }
     };
-    ws.onclose = () => updateProgress(0, "Rozłączono");
+    ws.onclose = () => {
+        updateProgress(0, "Rozłączono");
+        log("Połączenie z serwerem przerwane.", 'error');
+    };
 }
 
 document.getElementById('cmd').addEventListener('keypress', (e) => {
